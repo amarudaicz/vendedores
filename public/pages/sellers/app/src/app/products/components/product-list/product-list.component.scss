@@ -1,0 +1,73 @@
+// Estilos para Product List Component
+
+.container {
+  max-width: 1200px;
+}
+
+table {
+  tbody tr {
+    &:hover {
+      background-color: #f0f4ff;
+    }
+
+    &:last-child {
+      td {
+        border-bottom: 1px solid #e5e7eb;
+      }
+    }
+  }
+
+  thead {
+    th {
+      font-weight: 600;
+      color: #374151;
+      background-color: #f9fafb;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  td {
+    &:first-child {
+      font-family: monospace;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    &:last-child {
+      text-align: center;
+    }
+  }
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+
+  &:hover {
+    background: #94a3b8;
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  table {
+    font-size: 0.875rem;
+
+    th,
+    td {
+      padding: 0.5rem !important;
+    }
+  }
+}

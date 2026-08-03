@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <title>Pedido web #%ORDER_ID%</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; padding: 2rem; background: #f4f6f8; margin: 0">
+        <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden">
+            <div style="background: #36425b; color: #fff; padding: 1.5rem; text-align: center">
+                <h1 style="font-size: 18px; margin: 0">Actualización de tu pedido</h1>
+            </div>
+
+            <div style="padding: 1.5rem">
+                <p style="font-size: 14px; margin: 0 0 1rem 0">
+                    Hola <strong>#CUSTOMER_NAME#</strong>, te informamos el estado actual de tu pedido:
+                </p>
+
+                <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem">
+                    <div style="display: flex; justify-content: space-between; padding-bottom: .5rem; border-bottom: 1px solid #f0f0f0">
+                        <span style="color: #6b7280">Pedido N&deg;</span>
+                        <span style="font-weight: bold">#ORDER_ID#</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-top: .5rem">
+                        <span style="color: #6b7280">Estado de su pedido:</span>
+                        <span style="font-weight: bold; color: #1a8f59">#ORDER_STATUS#</span>
+                    </div>
+                </div>
+
+                <p style="font-size: .85rem; color: #6b7280">Si tenés alguna consulta, no dudes en contactarnos.</p>
+
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f0f0f0; font-size: .85rem; color: #6b7280; text-align: center">
+                    #FOOTER#
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

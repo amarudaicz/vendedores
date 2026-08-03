@@ -1,0 +1,107 @@
+
+.Order {
+    margin: auto;
+    width: 100%;
+    max-width: 1200px;
+    min-height: 200px;
+}
+
+.Order .content {
+    padding: 3rem;
+    background: white;
+}
+
+.Order .subtitle {
+    color: #ff3200;
+    font-weight: bold;
+}
+
+.Order .order-header {
+    margin-bottom: 1.5rem;
+}
+
+.Order .order-header .order-logo {
+    width: 100%;
+    max-width: 100px;
+}
+
+.Order .order-status {
+    font-size: .9rem;
+    padding: 0.2rem 0.5rem;
+    display: inline-block;
+    border-radius: 4px;
+}
+
+.Order .order-status.pending {
+    background-color: #ffc107; /* Yellow */
+    color: #333; /* Dark text */
+}
+
+.Order .order-status.delivered {
+    background-color: #28a745; /* Green */
+    color: #fff; /* White text */
+}
+
+.Order .order-status.invoiced {
+    background-color: #007bff; /* Blue */
+    color: #fff; /* White text */
+}
+
+.Order .order-body {
+    margin-bottom: 2rem;
+}
+
+.Order .order-body .order-detail-line span:nth-child(2) {
+    min-width: 90px;
+    display: inline-block;
+}
+
+.Order .order-body .order-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.Order .order-body .order-table th,
+.Order .order-body .order-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.Order .order-body .order-table th {
+    background-color: #f2f2f2;
+    color: #737373;
+}
+
+.Order .order-body .order-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.Order .order-body .order-table tfoot {
+    font-weight: bold;
+}
+
+.Order .order-footer .order-note {
+    padding: 1rem;
+    background: #fafafa;
+    height: 100%;
+}
+
+.Order .order-footer .order-paying-method {
+    padding: 1rem;
+    background: #fafafa;
+    height: 100%;
+}
+
+@media print {
+    .Order {
+        padding: 0;
+    }
+    .Order .no-print {
+        display: none;
+    }
+
+    .Order .content {
+        padding: 0;
+    }
+}

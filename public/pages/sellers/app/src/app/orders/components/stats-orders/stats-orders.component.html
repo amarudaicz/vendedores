@@ -1,0 +1,107 @@
+<div class="">
+  <h1 class="text-2xl font-bold mb-4">Resumen</h1>
+  <div class="overflow-x-auto md:overflow-hidden">
+    <div class="flex pb-2 gap-3">
+      <!-- Total Orders Box -->
+      <div class="bg-white rounded-lg shadow-md p-3 flex-1">
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <h2 class="font-semibold text-gray-800">Total</h2>
+          <i
+            class="hidden md:block icon-[material-symbols--box] text-xl telg-gray-700"
+          ></i>
+        </div>
+        <p class="text-lg font-bold text-gray-900">
+          <ng-container *ngIf="stats !== undefined; else totalOrdersSkeleton">
+            {{ stats.total_orders.count }}
+          </ng-container>
+          <ng-template #totalOrdersSkeleton>
+            <ngx-skeleton-loader
+              [theme]="{
+                width: '100px',
+                height: '32px',
+              }"
+            ></ngx-skeleton-loader>
+          </ng-template>
+        </p>
+        <!-- <p class="text-sm text-gray-500 mt-2 text-nowrap">
+          <ng-container *ngIf="stats !== undefined; else percentageSkeleton">
+            <span
+              [ngClass]="
+                isNegative(stats.total_orders.percentage)
+                  ? 'text-red-500'
+                  : 'text-green-500'
+              ">
+              {{ stats.total_orders.percentage }}%
+            </span>
+            <span class="text-xs text-gray-500">Respecto al mes anterior</span>
+          </ng-container>
+        </p> -->
+        <ng-template #percentageSkeleton>
+          <ngx-skeleton-loader
+            [theme]="{ width: '60px', height: '16px' }"
+          ></ngx-skeleton-loader>
+        </ng-template>
+      </div>
+
+      <!-- Pending Orders Box -->
+      <div class="bg-white rounded-lg shadow-md p-3 flex-1">
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <h2 class="font-semibold text-gray-800">Pendiente</h2>
+          <i
+            class="hidden md:block icon-[material-symbols--pending-actions-rounded] telg-xl text-gray-700"
+          ></i>
+        </div>
+        <p class="text-lg font-bold text-gray-900">
+          <ng-container *ngIf="stats !== undefined; else pendingSkeleton">
+            {{ stats.pending_orders.count }}
+          </ng-container>
+          <ng-template #pendingSkeleton>
+            <ngx-skeleton-loader
+              [theme]="{
+                width: '100px',
+                height: '32px',
+              }"
+            ></ngx-skeleton-loader>
+          </ng-template>
+        </p>
+        <!-- <p class="text-sm text-gray-500 mt-2 text-nowrap">
+          <ng-container
+            *ngIf="stats !== undefined; else deliveredPercentageSkeleton">
+            <span
+              [ngClass]="
+                isNegative(stats.delivered_orders.percentage)
+                  ? 'text-red-500'
+                  : 'text-green-500'
+              ">
+              {{ stats.delivered_orders.percentage }}%
+            </span>
+            <span class="text-xs text-gray-500">Respecto al mes anterior</span>
+          </ng-container>
+        </p> -->
+      </div>
+
+      <!-- Finalized Orders Box -->
+      <div class="bg-white rounded-lg shadow-md p-3 flex-1">
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <h2 class="font-semibold text-gray-800">Enviadas</h2>
+          <i
+            class="hidden md:block icon-[material-symbols--check-circle-outline-rounded] text-lg text-green-700"
+          ></i>
+        </div>
+        <p class="text-lg font-bold text-gray-900">
+          <ng-container *ngIf="stats !== undefined; else finalizedSkeleton">
+            {{ stats.finalized_orders.count }}
+          </ng-container>
+          <ng-template #finalizedSkeleton>
+            <ngx-skeleton-loader
+              [theme]="{
+                width: '100px',
+                height: '32px',
+              }"
+            ></ngx-skeleton-loader>
+          </ng-template>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

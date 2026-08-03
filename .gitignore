@@ -1,0 +1,7 @@
+.idea/
+vendor/
+public/node_modules
+public/multimedia/uploads
+public/pages/sellers/app/node_modules
+writable/files/pedidos/*
+writable/files/*

@@ -1,0 +1,198 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "design-spec-creator/design-md-schema",
+  "title": "DESIGN.md Specification",
+  "description": "Validates the structure of a *-DESIGN.md design system specification file. Extracts rules from the design-spec-creator skill.",
+  "type": "object",
+  "required": ["name", "description", "colors", "typography", "rounded", "spacing", "components"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Brand identifier (e.g. ferrari-design-analysis). Lowercase, hyphens."
+    },
+    "version": {
+      "type": "string",
+      "default": "alpha",
+      "description": "Document version. Use semantic versioning or alpha/beta."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Single paragraph capturing the brand's visual DNA. Must include canvas, accent color, type philosophy, and mood."
+    },
+    "colors": {
+      "type": "object",
+      "minProperties": 5,
+      "description": "Semantic color tokens. See SKILL.md Naming Conventions section.",
+      "patternProperties": {
+        "^(primary|primary-active|primary-hover|on-primary)$": { "$ref": "#/definitions/color-value" },
+        "^(canvas|canvas-elevated|canvas-light)$": { "$ref": "#/definitions/color-value" },
+        "^(surface-card|surface-soft|surface-soft-light|surface-strong-light|surface-dark|surface-deep)$": { "$ref": "#/definitions/color-value" },
+        "^(ink|body|body-strong|body-on-light|muted|muted-soft|charcoal|ash|stone)$": { "$ref": "#/definitions/color-value" },
+        "^(hairline|hairline-strong|hairline-on-light|hairline-soft|divider-dark)$": { "$ref": "#/definitions/color-value" },
+        "^(on-dark|on-light|on-dark-mute)$": { "$ref": "#/definitions/color-value" },
+        "^(semantic-(info|success|warning|error))$": { "$ref": "#/definitions/color-value" },
+        "^(accent-|badge-|link|error|warning|success|info).*": { "$ref": "#/definitions/color-value" }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/color-value"
+      }
+    },
+    "typography": {
+      "type": "object",
+      "minProperties": 5,
+      "description": "Typography scale. Each key is a role name following conventions in SKILL.md.",
+      "patternProperties": {
+        "^(display|heading|title|body|subtitle|caption|button|nav-link|overline|number-display)": {
+          "$ref": "#/definitions/typography-entry"
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/typography-entry"
+      }
+    },
+    "rounded": {
+      "type": "object",
+      "minProperties": 3,
+      "description": "Border radius scale. Keys: none, xs, sm, md, lg, xl, pill, full.",
+      "patternProperties": {
+        "^(none|xs|sm|md|lg|xl|pill|full)$": { "$ref": "#/definitions/px-value" }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/px-value"
+      }
+    },
+    "spacing": {
+      "type": "object",
+      "minProperties": 4,
+      "description": "Spacing scale. Keys: xxxs, xxs, xs, sm, md, lg, xl, xxl, xxxl, section.",
+      "patternProperties": {
+        "^(xxxs|xxs|xs|sm|md|lg|xl|xxl|xxxl|section)$": { "$ref": "#/definitions/px-value" }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/px-value"
+      }
+    },
+    "components": {
+      "type": "object",
+      "minProperties": 2,
+      "description": "Component definitions. Each key follows {context}-{variant} naming.",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]+$": {
+          "$ref": "#/definitions/component-entry"
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/component-entry"
+      }
+    }
+  },
+  "definitions": {
+    "color-value": {
+      "type": "string",
+      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^rgba?\\(.*\\)$|^transparent$",
+      "description": "Hex (#RRGGBB or #RGB), rgba(), or transparent."
+    },
+    "px-value": {
+      "type": "string",
+      "pattern": "^\\d+\\.?\\d*px$|^9999px$",
+      "description": "CSS pixel value (e.g. 4px, 16px, 9999px)."
+    },
+    "typography-entry": {
+      "type": "object",
+      "required": ["fontFamily", "fontSize", "fontWeight", "lineHeight"],
+      "properties": {
+        "fontFamily": {
+          "type": "string",
+          "minLength": 3,
+          "description": "CSS font-family string. Include fallbacks."
+        },
+        "fontSize": {
+          "type": "string",
+          "pattern": "^\\d+\\.?\\d*px$",
+          "description": "Font size in px."
+        },
+        "fontWeight": {
+          "type": ["integer", "string"],
+          "description": "Font weight number (300, 400, 500, 600, 700) or keyword."
+        },
+        "lineHeight": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 3,
+          "description": "Unitless line-height value."
+        },
+        "letterSpacing": {
+          "type": ["number", "string"],
+          "description": "Letter-spacing in px or rem. Can be negative."
+        },
+        "textTransform": {
+          "type": "string",
+          "enum": ["uppercase", "lowercase", "capitalize", "none"],
+          "description": "Text transform property."
+        }
+      },
+      "additionalProperties": false
+    },
+    "component-entry": {
+      "type": "object",
+      "description": "A reusable component definition with token references.",
+      "properties": {
+        "backgroundColor": {
+          "type": "string",
+          "description": "Background color — MUST use {section.key} token reference or valid CSS color."
+        },
+        "textColor": {
+          "type": "string",
+          "description": "Text color — MUST use {section.key} token reference or valid CSS color."
+        },
+        "borderColor": {
+          "type": "string",
+          "description": "Border color — MUST use {section.key} token reference."
+        },
+        "border": {
+          "type": "string",
+          "description": "CSS border shorthand or token reference."
+        },
+        "typography": {
+          "type": "string",
+          "pattern": "^\\{[a-z]+\\.[a-zA-Z0-9-]+\\}$",
+          "description": "Typography token reference in {section.key} format."
+        },
+        "rounded": {
+          "type": "string",
+          "pattern": "^\\{[a-z]+\\.[a-z]+\\}$",
+          "description": "Rounded token reference in {section.key} format."
+        },
+        "padding": {
+          "type": "string",
+          "pattern": "^\\d+px(\\s\\d+px)*$",
+          "description": "CSS padding value(s) in px."
+        },
+        "height": {
+          "type": "string",
+          "pattern": "^\\d+px$",
+          "description": "Fixed height in px."
+        },
+        "width": {
+          "type": "string",
+          "pattern": "^\\d+px$",
+          "description": "Fixed width or size in px."
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^\\d+px$",
+          "description": "Fixed size (square) in px."
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Opacity value 0-1."
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

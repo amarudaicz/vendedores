@@ -1,0 +1,23 @@
+<header class="w-full px-2 shadow-lg mb-3 relative bg-white">
+  <div class="flex justify-between items-center container mx-auto">
+    
+    <div class="flex-1">
+    </div>
+     
+    <div class="flex-1">
+      
+    </div>
+
+    <div class="">
+      <button  *ngIf="auth.getSeller() | async"
+        (click)="logOut()"
+        class="flex my-3 items-center gap-x-1 text-primary font-medium bg-transparent border border-primary rounded-md px-3 py-1"
+      >
+        <span class="font-bold">Cerrar Sesión</span>
+        <i class="icon-[icon-park-outline--logout]"></i>
+      </button>
+    </div>
+  </div>
+
+
+</header>

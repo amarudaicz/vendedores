@@ -1,0 +1,73 @@
+<div>
+    <div>
+      <div class="bg-white shadow-md p-4 rounded-lg overflow-hidden">
+        <div class="overflow-x-auto overflow-y-auto min-h-[400px] max-h-[600px] border rounded-lg relative">
+          <table class="w-full border-collapse">
+            <thead class="bg-gray-50 sticky top-0 left-0 w-full z-20">
+              <tr class="text-left">
+                  <th class="px-4 py-3 font-semibold text-gray-700">Fecha</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Tipo</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Cbte</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Subtotal</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">IVA</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Total</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Saldo</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Acumulado</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Cond Venta</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Demora (días)</th>
+              </tr>
+            </thead>
+  
+            <tbody>
+              <tr *ngIf="!filtredReceipts && !receipts">
+                <td colspan="13">
+                  <ngx-skeleton-loader
+                    count="5"
+                    animation="pulse"
+                    [theme]="{ height: '50px', margin: '5px 0', padding: '10px' }"
+                  ></ngx-skeleton-loader>
+                </td>
+              </tr>
+  
+              @for (c of filtredReceipts; track $index) {
+              <tr class="border-t hover:bg-gray-200 cursor-pointer">
+                  <td class="px-4 py-4 font-bold text-nowrap">{{ c.date_receipt }}</td>
+                <td class="px-4 py-4 font-bold">{{ c.type_receipt }}</td>
+                <td class="px-4 py-4">{{ c.number_receipt }}</td>
+                <td class="px-4 py-4">{{ c.subtotal_receipt | currency }}</td>
+                <td class="px-4 py-4">{{ c.iva_receipt | currency }}</td>
+                <td class="px-4 py-4 font-bold">{{ c.total_receipt | currency }}</td>
+                <td class="px-4 py-4 font-bold">{{ c.balance_receipt | currency }}</td>
+                <td class="px-4 py-4 ">{{ c.balance_accumulated | currency }}</td>
+                <td class="px-4 py-4">{{ c.condition_sale }}</td>
+                <td class="px-4 py-4">{{ c.delay_receipt }}</td>
+              </tr>
+              }
+            </tbody>
+
+            <tfoot class="bg-gray-100 font-bold sticky bottom-0" *ngIf="filtredReceipts?.length && receipts?.length">
+                <tr>
+                  <td colspan="3" class=""></td>
+                  <td class="px-4 py-3">{{ getTotal('subtotal_receipt') | currency }}</td>
+                  <td class="px-4 py-3">{{ getTotal('iva_receipt') | currency }}</td>
+                  <td class="px-4 py-3">{{ getTotal('total_receipt') | currency }}</td>
+                  <td class="px-4 py-3">{{ getTotal('balance_receipt') | currency }}</td>
+                  <td colspan="3"></td>
+                </tr>
+              </tfoot>
+          </table>
+  
+          <div
+            *ngIf="filtredReceipts && !filtredReceipts.length"
+            class="w-full h-full flex flex-col justify-center items-center min-h-[400px]"
+          >
+            <span
+              class="icon-[material-symbols--search-off-rounded] text-3xl text-gray-700"
+            ></span>
+            <p class="text-gray-700 text-lg">No se encontraron resultados</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  

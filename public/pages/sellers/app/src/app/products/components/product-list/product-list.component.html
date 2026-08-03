@@ -1,0 +1,124 @@
+<div class="w-full">
+  <div
+    class="bg-white p-4 shadow-md rounded-lg overflow-hidden flex flex-col h-[85vh]"
+  >
+    <div class="mb-3">
+      <h1 class="text-2xl font-bold mb-1">Productos Disponibles</h1>
+
+      <p class="text-gray-700 mb-4">
+        Lista de todos los productos activos en el sistema.
+      </p>
+
+      <div class="">
+        <div class="relative w-full md:w-1/2">
+          <span
+            class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500"
+          >
+            <span class="icon-[material-symbols--search] text-xl"></span>
+          </span>
+          <input
+            type="text"
+            class="w-full py-2 pl-10 pr-4 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            placeholder="Buscar por nombre o código..."
+            (input)="onSearch($event)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div
+      #scrollContainer
+      class="overflow-x-scroll overflow-y-auto flex-1 border-b"
+    >
+      @if (initialLoading()) {
+        <div class="p-4">
+          <ngx-skeleton-loader
+            count="15"
+            animation="pulse"
+            [theme]="{ height: '40px', 'margin-bottom': '10px' }"
+          ></ngx-skeleton-loader>
+        </div>
+      }
+
+      @if (error()) {
+        <div
+          class="w-full h-full flex flex-col justify-center items-center text-red-500 py-20"
+        >
+          <span class="icon-[material-symbols--error-outline] text-5xl"></span>
+          <p class="text-lg mt-2">{{ error() }}</p>
+        </div>
+      }
+
+      @if (displayedProducts().length > 0) {
+        <table class="w-full border">
+          <thead class="bg-gray-50 sticky top-0 left-0 z-10">
+            <tr class="text-left">
+              <th
+                class="px-6 py-4 font-semibold text-gray-700 border-b border-t uppercase text-xs tracking-wider"
+              >
+                Código
+              </th>
+              <th
+                class="px-6 py-4 font-semibold text-gray-700 border-b uppercase text-xs tracking-wider"
+              >
+                Nombre
+              </th>
+              <th
+                class="px-6 py-4 font-semibold text-gray-700 border-b uppercase text-xs tracking-wider text-center"
+              >
+                Stock
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of displayedProducts(); track product.code) {
+              <tr class="border-t hover:bg-blue-50 transition-colors">
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  {{ product.code }}
+                </td>
+                <td class="px-6 py-4 font-medium text-sm text-gray-900">
+                  <div class="flex flex-col w-[200px] md:w-auto">
+                    {{ product.name }}
+                    <span class="text-xs font-medium text-gray-900">
+                      {{ product.price | currency: "$" }}
+                    </span>
+                  </div>
+                </td>
+
+                <td
+                  class="px-6 py-4 text-sm text-gray-900 text-center font-semibold"
+                >
+                  {{ product.stock }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (isLoadingMore()) {
+          <div class="p-4 flex justify-center bg-gray-50">
+            <div class="flex items-center gap-2">
+              <span
+                class="icon-[eos-icons--loading] text-2xl text-primary"
+              ></span>
+              <span class="text-gray-600 text-sm"
+                >Cargando más productos...</span
+              >
+            </div>
+          </div>
+        }
+      } @else {
+        @if (!initialLoading() && !error()) {
+          <div
+            class="w-full h-full flex flex-col justify-center items-center text-red-500 py-20"
+          >
+            <span
+              class="icon-[material-symbols--search-off-rounded] text-5xl"
+            ></span>
+            <p class="text-lg mt-2">No se encontraron resultados</p>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

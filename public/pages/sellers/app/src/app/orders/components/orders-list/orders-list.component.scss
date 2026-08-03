@@ -1,0 +1,93 @@
+.Orders {
+    margin: auto;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.Orders .summery {
+    margin-bottom: 1rem;
+}
+
+.Orders .summery-box {
+    padding: 1rem;
+    background: #fff;
+    box-shadow: rgba(0, 0, 0, 0.10) 0 1px 5px;
+}
+
+.Orders .content {
+    background: white;
+    padding: 2rem;
+    box-shadow: rgba(0, 0, 0, 0.10) 0 1px 5px;
+}
+
+.Orders h2 {
+    font-size: 1.3rem;
+    margin-bottom: 2rem;
+}
+
+.Orders .entry-icon {
+    width: 100%;
+    max-width: 50px;
+    object-fit: contain;
+    aspect-ratio: 1/1;
+}
+
+.Orders .order-status {
+    font-size: .9rem;
+    padding: 0.3rem 0.6rem;
+    display: inline-block;
+    border-radius: 4px;
+}
+
+.Orders .order-status.pending {
+    background-color: #ffc107; /* Yellow */
+    color: #333; /* Dark text */
+}
+
+.Orders .order-status.delivered {
+    background-color: #28a745; /* Green */
+    color: #fff; /* White text */
+}
+
+.Orders .order-status.invoiced {
+    background-color: #007bff; /* Blue */
+    color: #fff; /* White text */
+}
+
+[data-theme="dark"] .Orders .content {
+    background: #2c374c;
+}
+
+/* Estilos de paginación */
+.pagination-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pagination-button {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background: white;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover:not(:disabled) {
+        background-color: #f3f4f6;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    &.active {
+        background: var(--color-primary, #7c3aed);
+        color: white;
+        border-color: var(--color-primary, #7c3aed);
+    }
+}

@@ -1,0 +1,293 @@
+<div class="Order">
+  <div class="flex justify-between mb-4 items-center">
+    <a
+      (click)="back()"
+      class="flex cursor-pointer items-center gap-x-1 p-2 rounded text-gray-800 font-bold"
+    >
+      <i class="icon-[icon-park-outline--left] text-2xl"></i>
+      <span>Volver</span>
+    </a>
+
+    <div class="flex items-center gap-5">
+      <div class="col-auto">
+        <button
+          type="button"
+          (click)="downloadPdf()"
+          name="pdf-download-button"
+          class="text-red-600 hover:scale-105 transition-all"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="50"
+            height="60"
+            viewBox="0 0 512 512"
+          >
+            <path
+              fill="currentColor"
+              d="M0 64C0 28.7 28.7 0 64 0h160v128c0 17.7 14.3 32 32 32h128v144H176c-35.3 0-64 28.7-64 64v144H64c-35.3 0-64-28.7-64-64zm384 64H256V0zM176 352h32c30.9 0 56 25.1 56 56s-25.1 56-56 56h-16v32c0 8.8-7.2 16-16 16s-16-7.2-16-16V368c0-8.8 7.2-16 16-16m32 80c13.3 0 24-10.7 24-24s-10.7-24-24-24h-16v48zm96-80h32c26.5 0 48 21.5 48 48v64c0 26.5-21.5 48-48 48h-32c-8.8 0-16-7.2-16-16V368c0-8.8 7.2-16 16-16m32 128c8.8 0 16-7.2 16-16v-64c0-8.8-7.2-16-16-16h-16v96zm80-112c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16s-7.2 16-16 16h-32v32h32c8.8 0 16 7.2 16 16s-7.2 16-16 16h-32v48c0 8.8-7.2 16-16 16s-16-7.2-16-16z"
+            />
+          </svg>
+        </button>
+      </div>
+      <div class="col-auto">
+        <button
+          type="button"
+          (click)="downloadCsv()"
+          name="csv-download-button"
+          class="text-green-600 hover:scale-105 transition-all"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="50"
+            height="60"
+            viewBox="0 0 512 512"
+          >
+            <path
+              fill="currentColor"
+              d="M0 64C0 28.7 28.7 0 64 0h160v128c0 17.7 14.3 32 32 32h128v144H176c-35.3 0-64 28.7-64 64v144H64c-35.3 0-64-28.7-64-64zm384 64H256V0zM200 352h16c22.1 0 40 17.9 40 40v8c0 8.8-7.2 16-16 16s-16-7.2-16-16v-8c0-4.4-3.6-8-8-8h-16c-4.4 0-8 3.6-8 8v80c0 4.4 3.6 8 8 8h16c4.4 0 8-3.6 8-8v-8c0-8.8 7.2-16 16-16s16 7.2 16 16v8c0 22.1-17.9 40-40 40h-16c-22.1 0-40-17.9-40-40v-80c0-22.1 17.9-40 40-40m133.1 0H368c8.8 0 16 7.2 16 16s-7.2 16-16 16h-34.9c-7.2 0-13.1 5.9-13.1 13.1c0 5.2 3 9.9 7.8 12l37.4 16.6c16.3 7.2 26.8 23.4 26.8 41.2c0 24.9-20.2 45.1-45.1 45.1H304c-8.8 0-16-7.2-16-16s7.2-16 16-16h42.9c7.2 0 13.1-5.9 13.1-13.1c0-5.2-3-9.9-7.8-12l-37.4-16.6c-16.3-7.2-26.8-23.4-26.8-41.2c0-24.9 20.2-45.1 45.1-45.1m98.9 0c8.8 0 16 7.2 16 16v31.6c0 23 5.5 45.6 16 66c10.5-20.3 16-42.9 16-66V368c0-8.8 7.2-16 16-16s16 7.2 16 16v31.6c0 34.7-10.3 68.7-29.6 97.6l-5.1 7.7c-3 4.5-8 7.1-13.3 7.1s-10.3-2.7-13.3-7.1l-5.1-7.7c-19.3-28.9-29.6-62.9-29.6-97.6V368c0-8.8 7.2-16 16-16"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="order-content" class="p-4 bg-white text-gray-800" #orderContent>
+    <div class="text-center text-sm text-gray-700 mb-2">
+      Documento no válido como factura
+    </div>
+
+    <div class="order-header mb-4">
+      <div class="row g-1 mb-4">
+        <div class="col">
+          <img
+            *ngIf="loading"
+            src="/public/multimedia/logos/logo.png"
+            class="order-logo"
+            alt=""
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <div class="col">
+          <span *ngIf="customer" class="text-blue-800 font-bold">Cliente</span>
+          <span *ngIf="guest" class="text-blue-800 font-bold">Invitado</span>
+          <ngx-skeleton-loader
+            *ngIf="loading"
+            count="2"
+            animation="pulse"
+          ></ngx-skeleton-loader>
+
+          <span *ngIf="!loading" class="block font-medium">{{
+            customer?.name || guest?.name
+          }}</span>
+          <span *ngIf="!loading" class="block font-medium"
+            ><span class="text-blue-800">Nro. Doc: </span
+            >{{ customer?.dni || guest?.tin }}</span
+          >
+
+          <div class="flex" *ngIf="customer">
+            <span class="block text-nowrap flex-1 font-medium">
+              <span class="text-blue-800"> Cód. Cliente: </span>
+              <span class="mr-2"> {{ customer?.code }}</span> |
+              <span class="text-blue-800 ml-2"> Zona: </span>
+              <span class="text-gray-700"> {{ customer?.zone }}</span></span
+            >
+          </div>
+        </div>
+
+        <div class="text-end">
+          <!-- Sección de ID de la Orden -->
+          <div>
+            <ngx-skeleton-loader
+              *ngIf="loading"
+              count="1"
+              animation="pulse"
+              class="block"
+            ></ngx-skeleton-loader>
+
+            <div *ngIf="order" class="">
+              <span class="text-blue-800 font-bold">Nota de Pedido N°: </span>
+              <span class="font-medium" data-js="order-data">{{
+                idOrden
+              }}</span>
+            </div>
+          </div>
+
+          <!-- Sección de Fecha de la Orden -->
+          <div>
+            <ngx-skeleton-loader
+              *ngIf="loading"
+              count="1"
+              animation="pulse"
+              class="block"
+            ></ngx-skeleton-loader>
+
+            <div *ngIf="order" class="">
+              <span class="text-blue-800 font-bold">Fecha: </span>
+              <span class="font-medium" data-js="order-date">
+                {{ order?.createdAt | date: "short" : "" : "es-AR" }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="order-body overflow-auto pb-3 mb-8 md:min-w-[900px]">
+      <table class="order-table">
+        <thead>
+          <tr>
+            <th class="p-2 text-left border border-gray-300" colspan="2">
+              Item
+            </th>
+            <th class="p-2 text-left border border-gray-300">Cant.</th>
+            <th
+              class="p-2 text-left border border-gray-300"
+              *ngIf="globalConfig.cotizacion"
+            >
+              Pr.U. USD
+            </th>
+            <th
+              class="p-2 text-left border border-gray-300"
+              *ngIf="globalConfig.cotizacion"
+            >
+              Tot. USD
+            </th>
+            <th class="p-2 text-left border border-gray-300">Pr.U. $</th>
+            <th class="p-2 text-left border border-gray-300">Tot. $</th>
+          </tr>
+        </thead>
+
+        <tbody data-js="order-line-container">
+          <tr *ngIf="loading">
+            <td colspan="5">
+              <ngx-skeleton-loader
+                count="5"
+                animation="pulse"
+                [theme]="{
+                  height: '20px',
+                  margin: '5px 0',
+                }"
+              ></ngx-skeleton-loader>
+            </td>
+          </tr>
+          <tr *ngFor="let item of items" class="nth-child-even:bg-gray-100">
+            <td class="p-2 text-left border border-gray-300" colspan="2">
+              <span class="block text-nowrap">
+                {{ item.description }}
+              </span>
+            </td>
+            <td class="p-2 text-left border border-gray-300">
+              {{ item.quantity }}
+            </td>
+            <td
+              class="p-2 text-left border border-gray-300"
+              *ngIf="globalConfig.cotizacion"
+            >
+              {{ item.price | currency }}
+            </td>
+            <td
+              class="p-2 text-left border font-bold border-gray-300"
+              *ngIf="globalConfig.cotizacion"
+            >
+              {{ item.price * item.quantity | currency }}
+            </td>
+            <td class="p-2 text-left border border-gray-300">
+              {{
+                item.price * (globalConfig.cotizacion ? item.cotizacion : 1)
+                  | currency
+              }}
+            </td>
+
+            <td class="p-2 text-left border font-bold border-gray-300">
+              {{
+                item.price *
+                  item.quantity *
+                  (globalConfig.cotizacion ? item.cotizacion : 1) | currency
+              }}
+            </td>
+          </tr>
+        </tbody>
+
+        <tfoot *ngIf="globalConfig.cotizacion">
+          <tr>
+            <td class="text-blue-800 font-bold">TOTAL USD</td>
+            <td>
+              <span *ngIf="total">{{ total | currency }}</span>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <ngx-skeleton-loader
+              *ngIf="!total"
+              animation="pulse"
+            ></ngx-skeleton-loader>
+          </tr>
+        </tfoot>
+
+        <tfoot>
+          <tr>
+            <td class="text-blue-800 font-bold">TOTAL $</td>
+            <td>
+              <span *ngIf="total">{{
+                total * (globalConfig.cotizacion ? cotizacion : 1) | currency
+              }}</span>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <ngx-skeleton-loader
+              *ngIf="!total"
+              animation="pulse"
+            ></ngx-skeleton-loader>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="order-footer pb-4" *ngIf="guest">
+      <div class="flex flex-col">
+        <span>Nombre: {{ guest.name }}</span>
+        <span>Telefono: {{ guest.phone }}</span>
+        <span>dni/cuit: {{ guest.tin }}</span>
+        <span>Ubicacion: {{ guest.location }}</span>
+        <span>CP: {{ guest.postalCode }}</span>
+      </div>
+      <div class="row g-3">
+        <div class="col">
+          <div class="order-note">
+            <div class="text-orange-600 font-bold">Nota</div>
+            <ngx-skeleton-loader
+              *ngIf="loading"
+              animation="pulse"
+            ></ngx-skeleton-loader>
+            <div *ngIf="order">{{ order?.note }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="order-paying-method">
+            <div class="text-orange-600 font-bold">Método pago</div>
+            <ngx-skeleton-loader
+              *ngIf="loading"
+              animation="pulse"
+            ></ngx-skeleton-loader>
+            <div *ngIf="order">{{ order?.paymentMethod }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="" *ngIf="globalConfig.cotizacion">
+      <span class="text-xs text-gray-700"
+        >Cotizacion vigente al momento de emisión de la presente nota de pedido:
+        {{ cotizacion | currency }}</span
+      >
+    </div>
+  </div>
+</div>

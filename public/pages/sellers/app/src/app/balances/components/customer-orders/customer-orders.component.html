@@ -1,0 +1,85 @@
+<div>
+  <div>
+    <div class="bg-white shadow-md p-4 rounded-lg overflow-hidden">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-xl">Pedidos</h1>
+
+        <div
+          class="text-sm text-gray-700 bg-slate-100 px-3 py-1 rounded"
+          *ngIf="orders"
+        >
+          Mostrando {{ orders.length || 0 }} de
+          {{ paginator.totalOrders }} pedidos
+        </div>
+      </div>
+
+      <div
+        #scrollContainer
+        class="overflow-x-auto overflow-y-auto min-h-[400px] max-h-[600px] border rounded-lg relative"
+      >
+        <div colspan="13" *ngIf="!orders">
+          <ngx-skeleton-loader
+            count="5"
+            animation="pulse"
+            [theme]="{ height: '50px', margin: '5px 0', padding: '10px' }"
+          ></ngx-skeleton-loader>
+        </div>
+
+        <div class="w-full h-full" *ngIf="orders && orders.length">
+          <div class="flex flex-col gap-y-2 p-3">
+            @for (o of orders; track $index) {
+            <div
+              (click)="viewOrder(o)"
+              class="p-4 rounded-md cursor-pointer border-l-4 bg-slate-50 hover:border-black transition-all"
+              [ngClass]="{
+                'border-red-200 text-red-800': o.status === 'pending',
+                'border-yellow-200 text-yellow-800': o.status === 'finalized',
+                'border-green-200 text-green-800': o.status === 'not_realized'
+              }"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <div class="">
+                  <span class="text-gray-800"> #{{ o.id }} </span>
+
+                  <span class="font-bold text-black">
+                    - {{ o.total | currency }} -
+                  </span>
+
+                  <span
+                    class="py-1 px-3 rounded-full font-semibold text-sm"
+                    [ngClass]="{
+                      'bg-red-200 text-red-800': o.status === 'pending',
+                      'bg-yellow-200 text-green-800': o.status === 'finalized',
+                      'bg-green-200 text-yellow-800': o.status === 'not_realized'
+                    }"
+                  >
+                    {{ getTranslatedStatus(o.status) }}
+                  </span>
+                </div>
+
+                <div class="">
+                  <span class="text-sm text-gray-800">
+                    {{ o.created_at | date : "MM/dd/yyyy" }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+
+        <div
+          *ngIf="orders && !orders.length"
+          class="w-full h-full flex flex-col justify-center items-center min-h-[400px]"
+        >
+          <span
+            class="icon-[material-symbols--search-off-rounded] text-3xl text-gray-700"
+          ></span>
+          <p class="text-gray-700 text-lg">No se encontraron resultados</p>
+        </div>
+
+        <div #scrollAnchor class=""></div>
+      </div>
+    </div>
+  </div>
+</div>

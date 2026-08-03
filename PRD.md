@@ -1,0 +1,4 @@
+necesito ordenar mi backend con respecto a las ordenes.
+tengo un desorden y problema de integridad de datos, comparto endpoints across panel de vendedores, admin dashboard general, y con la web de compra.
+por favor necesito que explores todos los endpoints y sus requerimientos de respuesta tal cual esta ahora, y me propongas una reestructuracion de codigo para que sea mas limpio, ordenado, y con mejor integridad de datos.
+en prinicipo solo nos enfoquemos en ordenes. no es tanta logica, puedes reutilizar casi todo el codigo solo ordenemos un poco hay mucho que no se esta utilizando y solo molesta.

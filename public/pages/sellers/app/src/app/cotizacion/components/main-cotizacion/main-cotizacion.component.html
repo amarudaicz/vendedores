@@ -1,0 +1,74 @@
+<div class="cotizacion-container">
+  <div class="cotizacion-card">
+    <h2 class="cotizacion-title">Cotización del Dólar</h2>
+
+    <!-- Error Message -->
+    @if (errorMessage) {
+      <div class="alert alert-error">
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    <!-- Success Message -->
+    @if (successMessage) {
+      <div class="alert alert-success">
+        <span>{{ successMessage }}</span>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (isLoading) {
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Cargando cotización...</p>
+      </div>
+    }
+
+    <!-- Form -->
+    @if (!isLoading) {
+      <form [formGroup]="dolarForm" (ngSubmit)="save()">
+        <div class="form-group">
+          <label for="dolar" class="form-label">
+            Valor del dólar (ARS)
+          </label>
+          <input
+            id="dolar"
+            type="number"
+            class="form-input"
+            formControlName="dolar"
+            step="0.01"
+            min="0.01"
+            placeholder="Ingrese el valor del dólar"
+          />
+          @if (
+            dolarForm.get('dolar')?.touched &&
+            dolarForm.get('dolar')?.invalid
+          ) {
+            <div class="error-message">
+              @if (dolarForm.get('dolar')?.hasError('required')) {
+                <span>El valor del dólar es requerido</span>
+              }
+              @if (dolarForm.get('dolar')?.hasError('min')) {
+                <span>El valor debe ser mayor a 0</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="submit"
+            class="btn btn-primary !bg-black"
+            [disabled]="isSaving || dolarForm.invalid"
+          >
+            @if (isSaving) {
+              <span class="btn-text">Guardando...</span>
+            } @else {
+              <span class="btn-text">Guardar</span>
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

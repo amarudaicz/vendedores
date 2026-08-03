@@ -1,0 +1,324 @@
+<div class="container mx-auto w-full">
+  <h1 class="text-2xl font-bold mb-4">Ordenes</h1>
+  <div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <!-- Panel de filtros -->
+    <div class="p-2 sm:p-3 w-full border-b bg-gray-50">
+      <form [formGroup]="filterForm">
+        <!-- Todos los filtros en una sola fila en desktop -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-2">
+          <!-- Búsqueda (más ancho en desktop) -->
+          <div class="lg:col-span-4">
+            <app-search-client
+              labelClass="block text-xs font-medium text-gray-700 mb-1"
+              labelClass="text-xs"
+              [form]="filterForm"
+              (customerEmitter)="onCustomerSelected($event)"
+              [required]="false"
+              ;
+            >
+            </app-search-client>
+          </div>
+
+          <!-- Estado -->
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Estado</label
+            >
+            <select
+              formControlName="status"
+              (change)="applyFilters()"
+              class="w-full px-2 h-[50px] border rounded focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+            >
+              <option value="">Todos</option>
+              <option value="pending">Pendiente</option>
+              <option value="finalized">Completada</option>
+              <option value="not_realized">No Concretada</option>
+            </select>
+          </div>
+
+          <!-- Fecha desde -->
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Desde</label
+            >
+            <input
+              formControlName="dateFrom"
+              type="date"
+              (change)="applyFilters()"
+              class="w-full px-2 h-[50px] border rounded focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+            />
+          </div>
+
+          <!-- Fecha hasta -->
+          <div class="lg:col-span-2">
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Hasta</label
+            >
+            <input
+              formControlName="dateTo"
+              type="date"
+              (change)="applyFilters()"
+              class="w-full px-2 h-[50px] border rounded focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+            />
+          </div>
+
+          <div class="lg:col-span-4" *ngIf="authService.isAdmin()">
+            <label for="vendedor">Vendedor</label>
+            <select
+              formControlName="sellerCode"
+              (change)="applyFilters()"
+              class="w-full px-2 h-[50px] border rounded focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+            >
+              <option value="">Todos</option>
+              <option *ngFor="let seller of sellers" [value]="seller.code">
+                {{ seller.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Botón limpiar -->
+          <div class="lg:col-span-2 flex items-end">
+            <button
+              type="button"
+              (click)="resetFilters()"
+              class="w-full px-3 h-[50px] bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm font-medium flex items-center justify-center gap-1"
+            >
+              <i class="icon-[material-symbols--refresh] text-base"></i>
+              <span class="hidden sm:inline">Limpiar</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tabla de órdenes -->
+    <div class="p-4 w-full">
+      <div class="flex justify-between items-center mb-4">
+        <div class="text-sm text-gray-600">
+          Mostrando
+          <span class="font-semibold">{{ filterOrders?.length || 0 }}</span>
+          ordenes
+        </div>
+      </div>
+      <!-- Contenedor con scroll horizontal y vertical -->
+      <div
+        #scrollContainer
+        class="overflow-x-auto overflow-y-auto min-h-[400px] max-h-[800px] border rounded-lg relative"
+      >
+        <table class="w-full border-collapse">
+          <thead class="bg-gray-50 sticky top-0 left-0 w-full z-20">
+            <tr class="text-left">
+              <th class="px-4 py-3 font-semibold text-gray-600">Orden ID</th>
+              <th class="px-4 py-3 font-semibold text-gray-600">Cliente</th>
+              <th
+                class="px-4 py-3 font-semibold text-gray-600"
+                *ngIf="authService.isAdmin()"
+              >
+                Vendedor
+              </th>
+              <th class="px-4 py-3 font-semibold text-gray-600">Fecha</th>
+              <th class="px-4 py-3 font-semibold text-gray-600">Total</th>
+              <th class="px-4 py-3 font-semibold text-gray-600">Estado</th>
+              <th class="px-4 py-3 font-semibold text-gray-600 text-center">
+                <span class="icon-[material-symbols--edit] text-lg"></span>
+              </th>
+              <th class="px-4 py-3 font-semibold text-gray-600 text-center">
+                <span
+                  class="icon-[icon-park-outline--preview-open] text-lg"
+                ></span>
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <!-- Mostrar esqueleto mientras no hay datos -->
+            <tr *ngIf="loading">
+              <td colspan="9">
+                <ngx-skeleton-loader
+                  count="5"
+                  animation="pulse"
+                  [theme]="{ height: '50px', margin: '5px 0', padding: '10px' }"
+                >
+                </ngx-skeleton-loader>
+              </td>
+            </tr>
+
+            @for (o of filterOrders; track $index) {
+              <tr class="border-t hover:bg-gray-200 cursor-pointer" *ngIf="!loading">
+                <td class="px-4 py-4">{{ o.id }}</td>
+                <td class="px-4 py-4 font-medium">
+                  <div class="flex flex-col">
+                    <span
+                      *ngIf="o.guest_id"
+                      class="text-xs text-blue-800 font-medium"
+                      >Invitado</span
+                    >
+                    <span>
+                      {{ o.customer_name }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-4 py-4 font-medium" *ngIf="authService.isAdmin()">
+                  {{ o.seller_name || "Pedido WEB" }}
+                </td>
+                <td class="px-4 py-4">
+                  {{ o.created_at | date: "dd/MM/yyyy HH:mm" : "" : "es-AR" }}
+                </td>
+                <td class="px-4 py-4 font-bold">{{ o.total | currency }}</td>
+                <td class="px-4 py-4">
+                  <div class="relative" #menuOptions>
+                    <!-- Botón Principal para Mostrar Opciones -->
+                    <button
+                      (click)="
+                        o.status === 'finalized'
+                          ? null
+                          : showOptionsStatus(o, $event)
+                      "
+                      class="flex items-center text-nowrap gap-x-1 px-4 w-[100px] text-center justify-center font-bold py-2 text-xs rounded-full border border-transparent"
+                      [ngClass]="{
+                        'bg-red-200 text-red-800': o.status === 'pending',
+                        'bg-yellow-200 text-yellow-800':
+                          o.status === 'confirmed',
+                        'bg-blue-200 text-blue-800': o.status === 'in_progress',
+                        'bg-green-200 text-green-800': o.status === 'finalized',
+                      }"
+                    >
+                      {{ getTranslatedStatus(o.status) }}
+                    </button>
+
+                    <!-- Opciones de Cambio de Estado -->
+                    <div
+                      *ngIf="o.showOptions"
+                      class="absolute z-50 border p-3 py-4 bg-slate-50 border-black shadow-lg rounded-md top-1/2 left-[50%] transform -translate-x-1/2 -translate-y-1/2 flex flex-col gap-y-2"
+                    >
+                      <button
+                        *ngFor="let status of getOptionsStatus(o)"
+                        (click)="
+                          changeStatus(status, o.id); o.showOptions = false
+                        "
+                        class="flex px-4 text-nowrap justify-center py-2 rounded-full border border-transparent hover:border-black"
+                        [ngClass]="{
+                          'bg-red-200 text-red-800': status === 'pending',
+                          'bg-yellow-200 text-yellow-800':
+                            status === 'confirmed',
+                          'bg-blue-200 text-blue-800': status === 'in_progress',
+                          'bg-green-200 text-green-800': status === 'finalized',
+                        }"
+                      >
+                        <span class="inline-block text-xs font-semibold">
+                          {{ getTranslatedStatus(status) }}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center px-2">
+                  <button
+                    class="text-left flex items-center justify-center p-2 h-[34px] w-[34px] rounded-full hover:bg-indigo-600 hover:bg-opacity-20 transition-all mx-auto"
+                    (click)="goToModify(o)"
+                    [title]="
+                      o.status !== 'pending'
+                        ? 'Solo se pueden modificar órdenes pendientes'
+                        : 'Modificar orden'
+                    "
+                    [ngClass]="{ 'opacity-50': o.status !== 'pending' }"
+                  >
+                    <span
+                      class="icon-[material-symbols--edit] text-xl text-gray-800"
+                      [ngClass]="{ 'opacity-50': o.status !== 'pending' }"
+                    ></span>
+                  </button>
+                </td>
+                <td class="text-center px-2">
+                  <button
+                    class="text-left flex items-center justify-center p-2 h-[34px] w-[34px] rounded-full hover:bg-primary hover:bg-opacity-20 transition-all mx-auto"
+                    (click)="goToDetail(o)"
+                  >
+                    <span
+                      class="icon-[icon-park-outline--preview-open] text-xl text-gray-800"
+                    ></span>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div
+          *ngIf="!loading && !filterOrders?.length"
+          class="w-full h-full flex flex-col justify-center items-center min-h-[400px]"
+        >
+          <span
+            class="icon-[material-symbols--search-off-rounded] text-3xl text-gray-700"
+          ></span>
+          <p class="text-gray-700 text-lg">No se encontraron resultados</p>
+        </div>
+
+        <!-- Overlay de loading suave -->
+        <div
+          *ngIf="loadingPage"
+          class="absolute inset-0 bg-white bg-opacity-60 flex items-center justify-center z-30"
+        >
+          <div class="flex flex-col items-center gap-2">
+            <span
+              class="icon-[eos-icons--loading] text-3xl text-primary"
+            ></span>
+            <span class="text-sm text-gray-600">Cargando...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paginador -->
+      <div
+        *ngIf="!loading && filterOrders && filterOrders.length > 0"
+        class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3 px-2"
+      >
+        <div class="text-xs sm:text-sm text-gray-600">
+          Página <span class="font-semibold">{{ paginator.page }}</span> de
+          <span class="font-semibold">{{ paginator.totalPages }}</span>
+        </div>
+
+        <div class="flex items-center gap-0.5 flex-wrap justify-center">
+          <!-- Botón anterior -->
+          <button
+            (click)="prevPage()"
+            [disabled]="paginator.page === 1 || loadingPage"
+            class="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Página anterior"
+          >
+            <span class="icon-[material-symbols--chevron-left] text-lg"></span>
+          </button>
+
+          <!-- Números de página -->
+          <button
+            *ngFor="let pageNum of getPageNumbers()"
+            (click)="goToPage(pageNum)"
+            [disabled]="loadingPage"
+            class="min-w-[28px] h-[28px] px-1.5 text-xs sm:text-sm rounded transition-all relative"
+            [ngClass]="{
+              'font-bold text-primary': pageNum === paginator.page,
+              'text-gray-600 hover:text-primary hover:bg-gray-50':
+                pageNum !== paginator.page,
+            }"
+          >
+            {{ pageNum }}
+            <span
+              *ngIf="pageNum === paginator.page"
+              class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4/5 h-0.5 bg-primary rounded-full"
+            ></span>
+          </button>
+
+          <!-- Botón siguiente -->
+          <button
+            (click)="nextPage()"
+            [disabled]="paginator.page === paginator.totalPages || loadingPage"
+            class="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Página siguiente"
+          >
+            <span class="icon-[material-symbols--chevron-right] text-lg"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

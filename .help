@@ -1,0 +1,9 @@
+Documentation
+
+Usage: php Application.php [options]
+
+Command options:
+  --cron        Run cron program.
+  --version     Display version.
+  --help        Display help text.
+

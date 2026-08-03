@@ -1,0 +1,51 @@
+<form [formGroup]="form" class="w-full">
+  <div class="w-full relative">
+    <label for="customerName" class="block font-medium" [ngClass]="labelClass">Buscar Cliente</label>
+
+    <div class="relative">
+      <input
+        #clientInput
+        placeholder="Buscar cliente"
+        type="text"
+        id="customerName"
+        formControlName="search"
+        autocomplete="off"
+        required
+        class="p-3 border mt-1 block w-full rounded-md shadow-sm bg-white"
+        [ngClass]="[isSearchInvalid() ? 'border-red-500' : 'border-slate-400']"
+      />
+  
+      <div *ngIf="isSearchInvalid()"  class="absolute top-1/2 right-3 transform -translate-y-1/2  flex items-center text-red-500">
+        <i class="icon-[icon-park-outline--info] mr-1"></i>
+        <span class="text-sm font-medium">Selecciona un cliente</span>
+      </div>
+    </div>
+
+
+    <div
+      class="absolute w-full rounded-md top-[101%] bg-white border max-h-[350px] overflow-y-auto left-0 z-50 shadow-sm"
+      *ngIf="suggestions"
+    >
+      @for (customer of suggestions; track $index) {
+      <button
+        (click)="selectCustomer(customer)"
+        class="text-left cursor-pointer p-3 w-full border-y hover:bg-slate-300"
+      >
+        <div class="flex w-full items-center justify-between gap-x-2">
+          <div class="">
+            <p class="font-semibold">
+              {{ customer.name }}
+            </p>
+
+            <p class="text-gray-700 font-medium text-sm">
+              {{ customer.dni }}
+            </p>
+          </div>
+        </div>
+      </button>
+      } @empty {
+      <span class="p-3 block text-center ">No se encontraron resultados</span>
+      }
+    </div>
+  </div>
+</form>
