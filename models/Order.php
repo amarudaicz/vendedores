@@ -55,7 +55,7 @@ class Order implements JsonSerializable
     /**
      * @var string
      */
-    private string $note;
+    private ?string $note;
 
     /**
      * @var string
@@ -141,7 +141,7 @@ class Order implements JsonSerializable
     /**
      * @return string
      */
-    public function getNote(): string
+    public function getNote(): ?string
     {
         return $this->note;
     }
@@ -247,7 +247,7 @@ class Order implements JsonSerializable
      *
      * @return $this
      */
-    public function setNote(string $note): Order
+    public function setNote(?string $note): Order
     {
         $this->note = $note;
         return $this;
