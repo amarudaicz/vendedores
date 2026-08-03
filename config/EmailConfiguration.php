@@ -19,7 +19,7 @@ abstract class EmailConfiguration {
     /**
      * The username for SMTP authentication.
      */
-    public const SMTP_USERNAME = 'noreply@essencedubai.com.ar';
+    public const SMTP_USERNAME = 'noreply@nvd.com.ar';
 
     /**
      * The password for SMTP authentication.
