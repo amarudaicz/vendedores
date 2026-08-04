@@ -24,7 +24,7 @@ abstract class EmailConfiguration {
     /**
      * The password for SMTP authentication.
      */
-    public const SMTP_PASSWORD = 'Dxtz=Qb&X8';
+    public const SMTP_PASSWORD = 'Rf528fx/;7z';
 
     /**
      * The name of the sender.
