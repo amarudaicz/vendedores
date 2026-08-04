@@ -29,7 +29,7 @@ abstract class EmailConfiguration {
     /**
      * The name of the sender.
      */
-    public const SENDER_NAME = 'Essence Dubai';
+    public const SENDER_NAME = 'NVD Mayorista';
 
     /**
      * The sender email address.
