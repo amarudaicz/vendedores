@@ -35,5 +35,8 @@ abstract class EmailConfiguration {
      * The sender email address.
      */
     public const SENDER_EMAIL = self::SMTP_USERNAME;
+
+    public const VENTAS_EMAIL = 'ventas@nvd.com.ar';
+    public const VENTAS_NAME = 'Ventas NVD';
 }
 

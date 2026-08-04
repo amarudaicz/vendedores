@@ -34,7 +34,7 @@ abstract class Notifications {
 
         $mailer->Subject = sprintf('Orden de compra #%08d', $order->getId());
         $mailer->setFrom(EmailConfiguration::SENDER_EMAIL, EmailConfiguration::SENDER_NAME);
-        $mailer->addAddress('ventas@essencedubai.com.ar', 'Ventas Essence Dubai');
+        $mailer->addAddress(EmailConfiguration::VENTAS_EMAIL, EmailConfiguration::VENTAS_NAME);
         $mailer->addAttachment($filename);
 
         $html = file_get_contents('public/templates/customer-order-email.html');
@@ -69,7 +69,7 @@ abstract class Notifications {
 
         $mailer->Subject = sprintf('Orden de compra #%08d', $order->getId());
         $mailer->setFrom(EmailConfiguration::SENDER_EMAIL, EmailConfiguration::SENDER_NAME);
-        $mailer->addAddress('ventas@essencedubai.com.ar', 'Ventas Essence Dubai');
+        $mailer->addAddress(EmailConfiguration::VENTAS_EMAIL, EmailConfiguration::VENTAS_NAME);
         $mailer->addAttachment($filename);
 
         $html = file_get_contents('public/templates/guest-order-email.html');
@@ -96,8 +96,6 @@ abstract class Notifications {
 
         $mailer->Subject = sprintf('Orden de compra #%08d', $order->getId());
         $mailer->setFrom(EmailConfiguration::SENDER_EMAIL, EmailConfiguration::SENDER_NAME);
-        // $mailer->addAddress('quanticasoft@gmail.com', 'Ventas Essence Dubai');
-        $mailer->addAddress('amarudaicz10@gmail.com', 'Ventas Essence Dubai');
         $mailer->addAttachment($filename);
         
         $html = file_get_contents('public/templates/seller-order-email.html');
