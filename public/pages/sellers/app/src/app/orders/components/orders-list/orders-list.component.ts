@@ -147,6 +147,11 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
     const availableStatuses = Object.keys(this.traduceStatus).filter(
       (s) => s !== order.status,
     ) as StatusKey[];
+
+    if (!this.authService.isAdmin()) {
+      return availableStatuses.filter((s) => s !== 'confirmed');
+    }
+
     return availableStatuses;
   }
 
@@ -201,7 +206,7 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
       .pipe(
         catchError((err) => {
           console.log(err);
-          
+
           this.alert.showAlert(err.error.message, 'error');
           return of(null);
         }),

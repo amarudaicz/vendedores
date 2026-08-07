@@ -42,11 +42,14 @@
               >
                 <div class="flex w-full items-center justify-between gap-x-2">
                   <div class="">
-                    <p class="font-semibold">
+                    <p class="">
                       {{ product.name }}
                     </p>
-                    <p class="font-medium text-sm">
+                    <p class="text-sm text-gray-600">
                       {{ product.code }}
+                    </p>
+                    <p class="font-medium font-bold">
+                      {{ product.price | currency }}
                     </p>
                   </div>
                   <div class="">

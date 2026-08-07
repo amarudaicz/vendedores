@@ -143,7 +143,7 @@ abstract class Notifications {
 
         $footerParts = array_filter([
             SiteConfiguration::NVD_NAME,
-            SiteConfiguration::NVD_EMAIL,
+            EmailConfiguration::VENTAS_EMAIL,
             SiteConfiguration::NVD_PHONE,
         ]);
 

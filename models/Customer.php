@@ -463,9 +463,12 @@ WHERE cliente_updated_at != ?";
      *
      * @return Customer|null
      */
-    public static function getCustomerByCode(int $code): ?Customer
+    public static function getCustomerByCode(int $code, int $zone): ?Customer
     {
         $conn = Connection::getConn();
+
+        error_log('code: ' . $code);
+        error_log('zone: ' . $zone);
 
         $query = "SELECT cliente_code AS code,
        cliente_name AS name,
@@ -477,11 +480,11 @@ WHERE cliente_updated_at != ?";
        cliente_email AS email,
        cliente_deleted AS deleted,
        cliente_updated_at AS updated_at
-FROM clientes WHERE cliente_code = ?";
+        FROM clientes WHERE cliente_code = ? AND cliente_zone = ?";
 
         $stmt = $conn->prepare($query);
 
-        $stmt->bind_param("i", $code);
+        $stmt->bind_param("ii", $code, $zone);
 
         $stmt->execute();
 

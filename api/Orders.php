@@ -66,7 +66,7 @@ abstract class Orders
         $orderItems = OrderItem::getOrderItems($orderId);
 
         if (!empty($order->getCustomerCode()))
-            $customer = Customer::getCustomerByCode($order->getCustomerCode());
+            $customer = Customer::getCustomerByCode($order->getCustomerCode(), $order->getCustomerZone());
 
         if (!empty($order->getGuestId()))
             $guest = Guest::getGuestById($order->getGuestId());
@@ -97,7 +97,7 @@ abstract class Orders
 
         $orderItems = OrderItem::getOrderItems($orderId);
 
-        $customer = Customer::getCustomerByCode($order->getCustomerCode() ?? 0);
+        $customer = Customer::getCustomerByCode($order->getCustomerCode() ?? $order->getGuestId(), $order->getCustomerZone());
 
         if (!empty($customer)) {
             $fileContent = sprintf("1;%08d\r\n", $order->getId());
@@ -213,7 +213,7 @@ abstract class Orders
 
         $order->setGuestId(null);
         $order->setCotizacion($cotizacion);
-        
+
         Order::createOrder($order);
 
         $orderItems = [];
@@ -437,8 +437,7 @@ abstract class Orders
         if (!in_array($data->status, [Order::STATUS_PENDING, Order::STATUS_FINALIZED, Order::STATUS_NOT_REALIZED, Order::STATUS_IN_PROGRESS, Order::STATUS_CONFIRMED]))
             throw new ApiException('El estado de la orden es inválido', 400);
 
-        if (!Order::canChangeStatus($order->getStatus(), $data->status))
-        {
+        if (!Order::canChangeStatus($order->getStatus(), $data->status)) {
             http_response_code(422);
             throw new ApiException(sprintf(
                 'No se puede cambiar el estado de la orden de "%s" a "%s"',
@@ -459,8 +458,12 @@ abstract class Orders
         $guest = null;
         $pdfPath = null;
 
+
+
         if (!empty($order->getCustomerCode())) {
-            $customer = Customer::getCustomerByCode($order->getCustomerCode());
+            error_log('customerCODE: ' . $order->getCustomerCode());
+            $customer = Customer::getCustomerByCode($order->getCustomerCode(), $order->getCustomerZone());
+            error_log('customer: ' . json_encode($customer));
             if (!empty($customer)) {
                 $customerName = $customer->getName() ?? $customerName;
                 $toEmail = $customer->getEmail() ?? '';
@@ -473,6 +476,7 @@ abstract class Orders
             }
         }
 
+        error_log('Email: ' . $customer->getEmail());
         // Crear archivo TXT solo cuando la orden pase a estado "confirmed"
         if ($data->status === Order::STATUS_CONFIRMED) {
             $orderItems = OrderItem::getOrderItems($orderId);
@@ -509,23 +513,21 @@ abstract class Orders
                 if (file_put_contents($pdfPath, $pdfContent) === false)
                     $pdfPath = null;
             } catch (\Throwable $e) {
-                Logger::log('ERROR', 'No se pudo generar el PDF del pedido #' . $order->getId() . ': ' . $e->getMessage());
+                error_log('No se pudo generar el PDF del pedido #' . $order->getId() . ': ' . $e->getMessage());
                 $pdfPath = null;
             }
         }
 
-        // Enviar al cliente/invitado el mail con el nuevo estado
         if (!empty($toEmail)) {
             try {
                 Notifications::sendOrderStatusUpdate($order, $toEmail, $statusLabel, $customerName, $pdfPath);
             } catch (\Exception $e) {
-                Logger::log('ERROR', 'No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': ' . $e->getMessage());
+                error_log('No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': ' . $e->getMessage());
             }
         } else {
-            Logger::log('WARN', 'No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': el cliente no tiene email registrado');
+            error_log('No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': el cliente no tiene email registrado');
         }
 
-        // Eliminar el PDF generado para el adjunto (no se conserva en disco)
         if (!empty($pdfPath) && file_exists($pdfPath)) {
             @unlink($pdfPath);
         }
