@@ -616,4 +616,63 @@ abstract class Orders
             throw new ApiException($e->getMessage(), 500);
         }
     }
+
+    /**
+     * Elimina una orden pendiente. Restaura stock y borra los archivos asociados.
+     * Solo admin o el vendedor dueño de la orden.
+     * @param int $orderId
+     * @return void
+     * @throws ApiException
+     */
+    public static function deleteOrder(int $orderId): void
+    {
+        SessionFilter::validateApiSession();
+        AccountFilter::filterApiCustomerAccount();
+
+        /** @var \models\Seller $seller */
+        $seller = Session::get('account');
+
+        $order = Order::getOrderById($orderId);
+
+        if (empty($order))
+            throw new ApiException('Orden no encontrada', 404);
+
+        if ($order->getStatus() !== Order::STATUS_PENDING)
+            throw new ApiException('Solo se pueden eliminar órdenes pendientes', 400);
+
+        if (!$seller->getIsAdmin() && $order->getSellerCode() !== $seller->getCode())
+            throw new ApiException('No tienes permisos para eliminar esta orden', 403);
+
+        Connection::getConn()->begin_transaction();
+
+        try {
+            // Restaurar stock de los productos
+            $orderItems = OrderItem::getOrderItems($orderId);
+            foreach ($orderItems as $orderItem) {
+                $product = Product::getProductByCode($orderItem->getProductCode());
+                if ($product) {
+                    $newStock = $product->getStock() + $orderItem->getQuantity();
+                    Product::updateStock($product->getCode(), $newStock);
+                }
+            }
+
+            OrderItem::deleteOrderItems($orderId);
+            Order::deleteOrder($orderId);
+
+            $txtPath = sprintf('../writable/files/pedidos/%08d.txt', $orderId);
+            if (file_exists($txtPath))
+                @unlink($txtPath);
+
+            $pdfPath = sprintf('../writable/files/pedidos/%08d.pdf', $orderId);
+            if (file_exists($pdfPath))
+                @unlink($pdfPath);
+
+            Connection::getConn()->commit();
+        } catch (\Throwable $e) {
+            Connection::getConn()->rollback();
+            throw new ApiException('No se pudo eliminar la orden: ' . $e->getMessage(), 500);
+        }
+
+        Response::setCode(204);
+    }
 }

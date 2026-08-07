@@ -186,6 +186,49 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
     this.router.navigate([`orders/${order.id}/modify`]);
   }
 
+  deleteOrder(order: any) {
+    if (order.status !== 'pending') {
+      this.alert.showAlert(
+        `Solo se pueden eliminar pedidos en estado "Pendiente"`,
+        'error',
+      );
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Seguro que querés eliminar la orden #${order.id}? Esta acción no se puede deshacer.`,
+    );
+
+    if (!confirmed) return;
+
+    this.ordersService
+      .deleteOrder(order.id)
+      .pipe(
+        catchError((err) => {
+          console.log(err);
+          this.alert.showAlert(
+            err.error?.message || 'No se pudo eliminar la orden',
+            'error',
+          );
+          return of(null);
+        }),
+      )
+      .subscribe((res) => {
+        if (!res) return;
+
+        this.filterOrders = this.filterOrders?.filter(
+          (o) => o.id !== order.id,
+        );
+
+        this.alert.showAlert(
+          `Orden #${order.id} eliminada correctamente`,
+          'success',
+        );
+
+        this.fetchOrders(this.filterForm.value, this.paginator.page);
+      });
+  }
+
   changeStatus(status: StatusKey, orderId: number) {
     // Buscar la orden actual para verificar su estado
     const currentOrder = this.filterOrders?.find(

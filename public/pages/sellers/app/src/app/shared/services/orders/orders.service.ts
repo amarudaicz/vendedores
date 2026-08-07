@@ -66,6 +66,10 @@ export class OrdersService {
     return this.http.put(`${environment.apiUrl}orders/${orderId}/items`, data, { withCredentials: true })
   }
 
+  deleteOrder(orderId: number) {
+    return this.http.delete(`${environment.apiUrl}orders/${orderId}`, { withCredentials: true })
+  }
+
   getStats(){
     return this.http.get<{data:{stats:OrderStats}}>(`${environment.apiUrl}sellers/stats`, { withCredentials: true })
   }

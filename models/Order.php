@@ -84,6 +84,8 @@ class Order implements JsonSerializable
 
     private ?int $guestId;
 
+    private ?int $sellerCode;
+
     /**
      * @var Customer|null
      */
@@ -116,6 +118,7 @@ class Order implements JsonSerializable
         $this->customerCode = null;
         $this->customerZone = null;
         $this->guestId = null;
+        $this->sellerCode = null;
         $this->customer = null;
         $this->guest = null;
         $this->total = 0.0;
@@ -189,6 +192,11 @@ class Order implements JsonSerializable
     public function getGuestId(): ?int
     {
         return $this->guestId;
+    }
+
+    public function getSellerCode(): ?int
+    {
+        return $this->sellerCode;
     }
 
     /**
@@ -309,6 +317,12 @@ class Order implements JsonSerializable
     public function setGuestId(?int $guestId): Order
     {
         $this->guestId = $guestId;
+        return $this;
+    }
+
+    public function setSellerCode(?int $sellerCode): Order
+    {
+        $this->sellerCode = $sellerCode;
         return $this;
     }
 
@@ -583,6 +597,7 @@ GROUP BY o.orden_id";
         o.orden_cliente_code AS customer_code,
         o.orden_cliente_zone AS customer_zone,
         o.orden_guest_id AS guest_id,
+        o.orden_vendedor_code AS seller_code,
         o.orden_cotizacion AS cotizacion
         FROM ordenes o
         WHERE o.orden_id = ?";
@@ -608,6 +623,7 @@ GROUP BY o.orden_id";
             $order->setCustomerCode($row["customer_code"]);
             $order->setCustomerZone($row["customer_zone"]);
             $order->setGuestId($row["guest_id"]);
+            $order->setSellerCode($row["seller_code"]);
             $order->setCotizacion($row["cotizacion"]);
         }
 
@@ -844,5 +860,20 @@ GROUP BY o.orden_id";
             'totalPages' => ceil($total / $perPage),
             'total' => $total
         ];
+    }
+
+    /**
+     * Elimina físicamente una orden.
+     * @param int $orderId
+     * @return bool
+     */
+    public static function deleteOrder(int $orderId): bool
+    {
+        $conn = Connection::getConn();
+
+        $stmt = $conn->prepare("DELETE FROM ordenes WHERE orden_id = ?");
+        $stmt->bind_param("i", $orderId);
+
+        return $stmt->execute();
     }
 }

@@ -70,6 +70,7 @@ if (isset($router)) {
     $router->post('/orders/(\d+)', 'api\Orders::updateOrder');
     $router->put('/orders/(\d+)/items', 'api\Orders::updateOrderItems');
     $router->put('/orders/(\d+)/status', 'api\Orders::updateOrderStatus');
+    $router->delete('/orders/(\d+)', 'api\Orders::deleteOrder');
 
     //SELLER API
     //products
