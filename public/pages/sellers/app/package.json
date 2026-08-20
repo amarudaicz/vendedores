@@ -20,8 +20,10 @@
     "@angular/platform-browser-dynamic": "^19.1.4",
     "@angular/router": "^19.1.4",
     "@ngrx/store": "^19.0.0",
+    "@primeng/themes": "^21.0.4",
     "html2pdf.js": "^0.10.2",
     "ngx-skeleton-loader": "^9.0.0",
+    "primeng": "^19.1.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

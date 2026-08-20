@@ -19,14 +19,16 @@ import {
 } from 'rxjs';
 import { Router } from '@angular/router';
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import AlertService from '../../../shared/services/alert/alert.service';
 import { OrdersService } from '../../../shared/services/orders/orders.service';
 import { SellersService } from '../../../shared/services/sellers/sellers.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { SearchClientComponent } from '../../../shared/components/search-client/search-client.component';
 import { Seller } from '../../../interfaces/seller';
-import { Order } from '../../../interfaces/Order';
-type StatusKey = 'pending' | 'finalized' | 'confirmed' | 'in_progress';
+import { Order, StatusKey, STATUS_FLOW, STATUS_LABELS } from '../../../interfaces/Order';
+
 
 @Component({
   selector: 'app-orders-list',
@@ -35,7 +37,9 @@ type StatusKey = 'pending' | 'finalized' | 'confirmed' | 'in_progress';
     NgxSkeletonLoaderModule,
     ReactiveFormsModule,
     SearchClientComponent,
+    ConfirmDialogModule,
   ],
+  providers: [ConfirmationService],
   templateUrl: './orders-list.component.html',
   styleUrl: './orders-list.component.scss',
 })
@@ -47,6 +51,7 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
     private fb: FormBuilder,
     public authService: AuthService,
     private sellersService: SellersService,
+    private confirmationService: ConfirmationService,
   ) {
     this.filterForm = this.fb.group({
       search: [''], // Usado internamente por SearchClientComponent
@@ -70,12 +75,8 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
   private searchSubject = new Subject<string>();
   sellers: Seller[] = [];
 
-  traduceStatus: { [key in StatusKey]: string } = {
-    pending: 'Pendiente',
-    finalized: 'Enviado',
-    confirmed: 'Confirmado',
-    in_progress: 'En proceso',
-  };
+  readonly traduceStatus = STATUS_LABELS;
+
 
   paginator: any = {
     page: 1,
@@ -86,7 +87,7 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
   ngOnInit() {
     this.fetchOrders();
 
-    if (this.authService.isAdmin()) {
+    if (this.authService.isAdmin()) { 
       this.sellersService.getSellers().subscribe((res) => {
         this.sellers = res;
       });
@@ -149,7 +150,7 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
     ) as StatusKey[];
 
     if (!this.authService.isAdmin()) {
-      return availableStatuses.filter((s) => s !== 'confirmed');
+      return availableStatuses.filter((s) => s === 'confirmed' || s === 'pending');
     }
 
     return availableStatuses;
@@ -230,26 +231,82 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
   }
 
   changeStatus(status: StatusKey, orderId: number) {
-    // Buscar la orden actual para verificar su estado
-    const currentOrder = this.filterOrders?.find(
-      (order) => order.id === orderId,
-    );
-
-    // Impedir cambiar estado de órdenes ya finalizadas
-    if (currentOrder && currentOrder.status === 'finalized') {
+    // 'En proceso' es un estado automático — nunca seleccionable manualmente
+    if (status === 'in_progress') {
       this.alert.showAlert(
-        `No se puede cambiar el estado de una orden en estado "${this.traduceStatus['finalized']}"`,
-        'error',
+        'Este estado es automático, no puede ser seleccionado.',
+        'warning',
       );
       return;
     }
 
+    const currentOrder = this.filterOrders?.find(
+      (order) => order.id === orderId,
+    );
+
+    const currentStatus = currentOrder?.status as StatusKey;
+
+    // Validar que la transición esté permitida por el STATUS_FLOW
+    const allowedTransitions = STATUS_FLOW[currentStatus] ?? [];
+    if (!allowedTransitions.includes(status)) {
+      const fromLabel = this.traduceStatus[currentStatus] ?? currentStatus;
+      const toLabel   = this.traduceStatus[status] ?? status;
+      this.alert.showAlert(
+        `Transición no permitida: no se puede pasar de "${fromLabel}" a "${toLabel}".`,
+        'warning',
+      );
+      return;
+    }
+
+
+    // Configuración base compartida
+    const baseConfig = {
+      acceptLabel: 'Aceptar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-primary',
+      rejectButtonStyleClass: 'p-button-text',
+      dismissableMask: true,
+      defaultFocus: 'accept' as const,
+      accept: () => this.executeStatusChange(status, orderId),
+    };
+
+    // PENDIENTE → CONFIRMADO
+    if (currentStatus === 'pending' && status === 'confirmed') {
+      this.confirmationService.confirm({
+        ...baseConfig,
+        header: 'Confirmar envío al Sistema de Gestión',
+        message: 'Confirmá el envío de la <strong>Nota de Pedido</strong> al Sistema de Gestión.',
+        icon: 'pi pi-send',
+      });
+      return;
+    }
+
+    // EN PROCESO → ENVIADO
+    if (currentStatus === 'in_progress' && status === 'finalized') {
+      this.confirmationService.confirm({
+        ...baseConfig,
+        header: 'PEDIDO ENVIADO',
+        message: 'Se enviará una <strong>notificación al cliente</strong> informando que su pedido está en camino.',
+        icon: 'pi pi-truck',
+      });
+      return;
+    }
+
+    // Cualquier otra transición (ej: admin cambiando a un estado arbitrario)
+    this.confirmationService.confirm({
+      ...baseConfig,
+      header: 'Confirmar cambio de estado',
+      message: `¿Confirmás que querés cambiar el estado de la orden <strong>#${orderId}</strong> a <strong>${this.getTranslatedStatus(status)}</strong>?`,
+      icon: 'pi pi-exclamation-triangle',
+    });
+  }
+
+  private executeStatusChange(status: StatusKey, orderId: number) {
     this.ordersService
       .updateOrder(status, orderId)
       .pipe(
         catchError((err) => {
           console.log(err);
-
           this.alert.showAlert(err.error.message, 'error');
           return of(null);
         }),
@@ -272,6 +329,7 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
         this.fetchOrders(this.filterForm.value, this.paginator.page);
       });
   }
+
 
   getTranslatedStatus(status: StatusKey): string {
     return this.traduceStatus[status];
