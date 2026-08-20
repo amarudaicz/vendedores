@@ -3,10 +3,9 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { BalanceService } from '../../services/balance.service';
 import { CustomersService } from '../../../clients/services/customers.service';
-import { Order } from '../../../interfaces/Order';
+import { Order, STATUS_LABELS, StatusKey } from '../../../interfaces/Order';
 import { Router } from '@angular/router';
 import { OrdersService } from '../../../shared/services/orders/orders.service';
-type StatusKey = 'pending' | 'finalized' | 'not_realized';
 
 @Component({
   selector: 'app-customer-orders',
@@ -15,11 +14,7 @@ type StatusKey = 'pending' | 'finalized' | 'not_realized';
   styleUrl: './customer-orders.component.scss',
 })
 export class CustomerOrdersComponent {
-  traduceStatus: { [key in StatusKey]: string } = {
-    pending: 'Pendiente',
-    finalized: 'Completada',
-    not_realized: 'No Concretada',
-  };
+  traduceStatus = STATUS_LABELS;
   orders?: Order[];
 
   @ViewChild('scrollAnchor', { static: true }) scrollAnchor!: ElementRef;
