@@ -1,0 +1,61 @@
+name: Deploy Branch Greendor
+
+on:
+  push:
+    branches:
+      - greendor
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build and Deploy Greendor (Vendedores)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # ── 1. Build Angular (sellers app) ────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Angular dependencies
+        working-directory: ./public/pages/sellers/app
+        run: npm install --legacy-peer-deps
+
+      - name: Build Angular app
+        working-directory: ./public/pages/sellers/app
+        run: npm run build -- --configuration production
+
+      # ── 2. Install PHP dependencies ────────────────────────────────
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      # ── 3. Deploy todo via FTP ─────────────────────────────────────
+      - name: Deploy to Hostinger via FTP (Greendor - vendedores)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER_GREENDOR }}
+          username: ${{ secrets.FTP_USERNAME_GREENDOR }}
+          password: ${{ secrets.FTP_PASSWORD_GREENDOR }}
+          port: 21
+          local-dir: ./
+          server-dir: ./vendedores/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.angular/**
+            **/.vscode/**
+            **/writable/files/**
+            **/*.sql
+            **/public/pages/sellers/app/src/**
+            **/public/pages/sellers/app/*.json
+            **/public/pages/sellers/app/*.js
+            **/public/pages/sellers/app/*.ts
+            **/public/pages/sellers/app/*.md
+            **/public/pages/sellers/app/*.sh
+            **/public/pages/sellers/app/public/**
+          dangerous-clean-slate: false
