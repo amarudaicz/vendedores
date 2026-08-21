@@ -46,10 +46,16 @@ export class CatalogComponent {
       })
       .subscribe({
         next: (blob) => {
+          const now = new Date();
+          const pad = (n: number) => String(n).padStart(2, '0');
+          const datetime =
+            `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;+
+          console.log(datetime);
+          
           const objectUrl = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = objectUrl;
-          a.download = `catalogo_lista_${this.selectedList.value}.xlsx`;
+          a.download = `catalogo_lista_${this.selectedList.value}_${datetime}.xlsx`;
           a.click();
           URL.revokeObjectURL(objectUrl);
           this.isLoading.set(false);

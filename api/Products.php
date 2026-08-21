@@ -213,7 +213,8 @@ abstract class Products {
         }
 
         // --- Enviar el archivo al browser ---
-        $filename = 'catalogo_lista_' . $list . '.xlsx';
+        $datetime = date('Y-m-d');
+        $filename = 'catalogo_lista_' . $list . '_' . $datetime . '.xlsx';
 
         // Limpiar cualquier output previo
         if (ob_get_length()) {
@@ -229,4 +230,4 @@ abstract class Products {
 
         exit;
     }
-}
+}
