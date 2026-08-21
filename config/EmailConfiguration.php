@@ -19,7 +19,7 @@ abstract class EmailConfiguration {
     /**
      * The username for SMTP authentication.
      */
-    public const SMTP_USERNAME = 'noreply@nvd.com.ar';
+    public const SMTP_USERNAME = 'noreply@wizdigitalsolutions.com';
 
     /**
      * The password for SMTP authentication.
@@ -29,14 +29,14 @@ abstract class EmailConfiguration {
     /**
      * The name of the sender.
      */
-    public const SENDER_NAME = 'NVD Mayorista';
+    public const SENDER_NAME = 'WIZ DIGITAL SOLUTIONS';
 
     /**
      * The sender email address.
      */
     public const SENDER_EMAIL = self::SMTP_USERNAME;
 
-    public const VENTAS_EMAIL = 'ventas@nvd.com.ar';
+    public const VENTAS_EMAIL = 'ventas@wizdigitalsolutions.com';
     public const VENTAS_NAME = 'Ventas NVD';
 }
 
