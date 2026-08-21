@@ -53,6 +53,12 @@ export class MainNavComponent implements OnInit {
           icon: 'icon-[icon-park-outline--dollar]',
         }
       : null,
+    {
+      id: 7,
+      link: 'catalog',
+      label: 'Catálogo Excel',
+      icon: 'icon-[icon-park-outline--excel-one]',
+    },
   ].filter((i) => i !== null);
 
   pathActive: string = '';

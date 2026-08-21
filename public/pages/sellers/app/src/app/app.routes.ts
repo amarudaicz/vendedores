@@ -111,8 +111,19 @@ export const routes: Routes = [
                 (m) => m.MainCotizacionComponent,
               ),
           },
+          {
+            path: 'catalog',
+            loadComponent: () =>
+              import('./catalog/catalog.component').then(
+                (m) => m.CatalogComponent,
+              ),
+          },
         ],
       },
+      {
+        path: '**',
+        redirectTo: '',
+      }
     ],
   },
 ];

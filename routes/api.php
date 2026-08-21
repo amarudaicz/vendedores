@@ -30,6 +30,7 @@ if (isset($router)) {
     $router->delete('/accounts/authorized-emails/(\d+)', 'api\AuthorizedEmails::deleteAuthorizedEmail');
 
     // Product API
+    $router->get('/products/catalog/excel', 'api\Products::getCatalogExcel');
     $router->get('/products', 'api\Products::getProducts');
     $router->get('/products/([\d-]+)', 'api\Products::getProduct');
     $router->post('/products/([\d-]+)', 'api\Products::updateProduct');

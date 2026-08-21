@@ -4,6 +4,7 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { ProductsService } from '../../../shared/services/products/products.service';
 import { CustomersService } from '../../../clients/services/customers.service';
+import { environment } from '../../../../../environment';
 
 @Component({
   selector: 'app-customer-balance',
@@ -100,7 +101,7 @@ export class CustomerBalanceComponent {
           <div style="display:flex;justify-content:space-between;align-items:flex-start;
                       margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #1a1a2e;">
             <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#1a1a2e;">
-              NVD MAYORISTA<span style="color:#4f46e5;">.</span>
+              ${environment.empresa.nombre} <span style="color:#4f46e5;">.</span>
             </div>
             <div style="text-align:right;font-size:8px;color:#6b7280;line-height:1.8;">
               <div style="color:#1a1a2e;font-size:12px;font-weight:700;margin-bottom:2px;">Cuenta Corriente</div>

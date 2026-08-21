@@ -1,0 +1,71 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-xl mx-auto">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-900">Catálogo Excel</h1>
+      <p class="mt-1 text-sm text-gray-500">
+        Descargá el catálogo completo de productos con el precio de la lista seleccionada.
+      </p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
+
+      <!-- Icon -->
+      <div class="flex items-center justify-center w-16 h-16 rounded-xl bg-green-50">
+        <i class="icon-[icon-park-outline--excel-one] text-green-600 text-3xl"></i>
+      </div>
+
+      <!-- Select lista de precios -->
+      <div class="space-y-2">
+        <label class="block text-sm font-semibold text-gray-700">
+          Lista de precios
+        </label>
+        <p-select
+          id="price-list-select"
+          [options]="priceLists"
+          [(ngModel)]="selectedList"
+          optionLabel="label"
+          styleClass="w-full"
+          placeholder="Seleccioná una lista"
+        />
+      </div>
+
+      <!-- Info chip -->
+      <div class="flex items-start gap-3 rounded-xl bg-blue-50 border border-blue-100 p-4">
+        <i class="icon-[icon-park-outline--info] text-blue-500 text-lg mt-0.5 shrink-0"></i>
+        <p class="text-sm text-blue-700">
+          El archivo incluirá: <strong>Código, Nombre, Descripción, Stock, Precio</strong> (lista {{ selectedList.value }})
+          <strong>, Categoría y Subcategoría</strong> de todos los productos disponibles.
+        </p>
+      </div>
+
+      <!-- Botón -->
+      <button
+        id="download-catalog-btn"
+        (click)="downloadCatalog()"
+        [disabled]="isLoading()"
+        class="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl
+               bg-primary text-white font-semibold text-sm
+               hover:brightness-110 active:scale-[0.98]
+               transition-all duration-150
+               disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        @if (isLoading()) {
+          <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+          <span>Generando...</span>
+        } @else {
+          <i class="icon-[icon-park-outline--download-two] text-lg"></i>
+          <span>Descargar Lista {{ selectedList.value }}</span>
+        }
+      </button>
+
+    </div>
+  </div>
+</div>
