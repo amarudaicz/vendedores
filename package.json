@@ -1,0 +1,11 @@
+{
+  "name": "vendedores-nvd-hooks",
+  "description": "Root package — solo para gestionar git hooks con Husky.",
+  "private": true,
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.0.0"
+  }
+}
