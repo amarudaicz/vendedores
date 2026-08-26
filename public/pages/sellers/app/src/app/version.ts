@@ -1,0 +1,6 @@
+export const VERSION = {
+  version: '1.0.7',
+  branch: 'nvd',
+  commit: '0000000',
+  date: '2026-08-21',
+};
