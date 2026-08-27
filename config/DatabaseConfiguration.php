@@ -10,7 +10,7 @@ abstract class DatabaseConfiguration
     /**
      * The host name or IP address of the database server.
      */
-    public const DB_HOST = '193.203.175.226';
+    public const DB_HOST = 'localhost';
 
     /**
      * The port number on which the database server is listening.
