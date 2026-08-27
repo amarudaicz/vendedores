@@ -30,7 +30,7 @@ ErrorDocument 404 /404.html
     RewriteRule ^api/v1/(.*)$ api.php/$1 [L]
 
     # ✅ Angular vendedores (SPA)
-    RewriteRule ^vendedores(/.*)?$ /public/pages/sellers/app/dist/browser/index.html [L]
+    RewriteRule (/.*)?$ /public/pages/sellers/app/dist/browser/index.html [L]
 
     # ✅ Backend PHP (fallback)
     RewriteRule ^ index.php [L]
