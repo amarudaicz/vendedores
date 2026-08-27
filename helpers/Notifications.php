@@ -132,7 +132,7 @@ abstract class Notifications {
         $mailer->isSMTP();
         $mailer->isHTML();
 
-        $mailer->Subject = sprintf('Pedido web #%08d %s - %s', $order->getId(), $statusLabel, SiteConfiguration::NVD_NAME);
+        $mailer->Subject = sprintf('Pedido web #%08d %s - %s', $order->getId(), $statusLabel, SiteConfiguration::NAME);
         $mailer->setFrom(EmailConfiguration::SENDER_EMAIL, EmailConfiguration::SENDER_NAME);
         $mailer->addReplyTo('ventas@nvd.com.ar', 'Ventas NVD');
         $mailer->addAddress($toEmail, $customerName);
@@ -142,9 +142,9 @@ abstract class Notifications {
         }
 
         $footerParts = array_filter([
-            SiteConfiguration::NVD_NAME,
+            SiteConfiguration::NAME,
             EmailConfiguration::VENTAS_EMAIL,
-            SiteConfiguration::NVD_PHONE,
+            SiteConfiguration::PHONE,
         ]);
 
         $footer = implode(' &nbsp;|&nbsp; ', array_map('htmlspecialchars', $footerParts));
