@@ -91,12 +91,12 @@ class Product implements JsonSerializable
     /**
      * @var int
      */
-    private int $categoryCode;
+    private int|string|null $categoryCode;
 
     /**
      * @var int|null
      */
-    private ?int $subcategoryCode;
+    private int|string|null $subcategoryCode;
 
     /**
      * @var Image|null
