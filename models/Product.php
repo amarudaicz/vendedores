@@ -303,17 +303,17 @@ class Product implements JsonSerializable
     }
 
     /**
-     * @return int
+     * @return int|string|null
      */
-    public function getCategoryCode(): int
+    public function getCategoryCode(): int|string|null
     {
         return $this->categoryCode;
     }
 
     /**
-     * @return int|null
+     * @return int|string|null
      */
-    public function getSubcategoryCode(): ?int
+    public function getSubcategoryCode(): int|string|null
     {
         return $this->subcategoryCode;
     }
@@ -507,22 +507,22 @@ class Product implements JsonSerializable
     }
 
     /**
-     * @param int $categoryCode
+     * @param int|string|null $categoryCode
      *
      * @return $this
      */
-    public function setCategoryCode(int $categoryCode): Product
+    public function setCategoryCode(int|string|null $categoryCode): Product
     {
         $this->categoryCode = $categoryCode;
         return $this;
     }
 
     /**
-     * @param int|null $subcategoryCode
+     * @param int|string|null $subcategoryCode
      *
      * @return $this
      */
-    public function setSubcategoryCode(?int $subcategoryCode): Product
+    public function setSubcategoryCode(int|string|null $subcategoryCode): Product
     {
         $this->subcategoryCode = $subcategoryCode;
         return $this;
