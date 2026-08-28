@@ -81,7 +81,7 @@ class Category implements JsonSerializable {
      *
      * @return $this
      */
-    public function setName(string $name): Category {
+    public function setName(string $name): Category { 
         $this->name = $name;
         return $this;
     }

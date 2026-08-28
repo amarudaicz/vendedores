@@ -1,2 +1,9 @@
-#!/bin/sh
-node scripts/bump-version.mjs
+#!/usr/bin/env bash
+set -e
+
+ROOT=$(git rev-parse --show-toplevel)
+
+node "$ROOT/scripts/bump-version.mjs"
+
+git add "$ROOT/version.json" \
+        "$ROOT/public/pages/sellers/app/src/app/version.ts"
