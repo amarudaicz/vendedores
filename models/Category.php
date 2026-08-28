@@ -11,7 +11,7 @@ class Category implements JsonSerializable {
     /**
      * @var int
      */
-    private int $code;
+    private int|string|null $code;
 
     /**
      * @var string
@@ -41,7 +41,7 @@ class Category implements JsonSerializable {
     /**
      * @return int
      */
-    public function getCode(): int {
+    public function getCode(): int|string|null {
         return $this->code;
     }
 
@@ -71,7 +71,7 @@ class Category implements JsonSerializable {
      *
      * @return $this
      */
-    public function setCode(int $code): Category {
+    public function setCode(int|string|null $code): Category {
         $this->code = $code;
         return $this;
     }
