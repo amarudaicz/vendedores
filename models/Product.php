@@ -1374,7 +1374,7 @@ $query = "SELECT p.articulo_code AS code,
             $product->setCode($row['code']);
             $product->setName($row['name']);
             $product->setDescription($row['description']);
-            $precioSinIva = round($row['price'] / 1.21, 2);
+            $precioSinIva = round($row['price'], 2);
             $product->setPrice($precioSinIva);
             $product->setStock($row['stock']);
             $product->setFeatured($row['featured']);
