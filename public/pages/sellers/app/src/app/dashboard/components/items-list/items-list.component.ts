@@ -229,15 +229,15 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
         'error',
       );
       return;
-    }
+    } 
 
-    if(formValue.quantity > formValue.product.stock){
-      this.alertService.showAlert(
-        'No hay stock suficiente',
-        'error',
-      );
-      return;
-    }
+    // if(formValue.quantity > formValue.product.stock){
+    //   this.alertService.showAlert(
+    //     'No hay stock suficiente',
+    //     'error',
+    //   );
+    //   return;
+    // }
 
     this.itemsFormArray.push(
       this.fb.group({
