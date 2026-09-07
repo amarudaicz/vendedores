@@ -309,10 +309,10 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
   }
 
   selectSuggestion(suggestion: any) {
-    if (!suggestion.stock || suggestion.stock < 0) {
-      this.alertService.showAlert('No hay stock del producto', 'error');
-      return;
-    }
+    // if (!suggestion.stock || suggestion.stock < 0) {
+    //   this.alertService.showAlert('No hay stock del producto', 'error');
+    //   return;
+    // }
 
     this.formNewProduct.patchValue(
       { product: suggestion, query: suggestion.name },
