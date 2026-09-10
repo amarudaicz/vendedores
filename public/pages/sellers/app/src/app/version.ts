@@ -1,8 +1,8 @@
 // AUTO-GENERADO — no editar manualmente
-// Generado el 2026-09-07T18:25:42.617Z
+// Generado el 2026-09-10T13:58:47.939Z
 export const VERSION = {
-  version: '1.0.5',
+  version: '1.0.6',
   branch: 'greendor',
-  commit: '79a009d',
-  date: '2026-09-07',
+  commit: '1e9f2f0',
+  date: '2026-09-10',
 };
