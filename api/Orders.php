@@ -417,6 +417,8 @@ abstract class Orders
      */
     public static function updateOrderStatus(int $orderId): void
     {
+        Logger::configure(__DIR__ . '/.errores.log');
+
         SessionFilter::validateApiSession();
         AccountFilter::filterApiCustomerAccount();
 
@@ -461,9 +463,7 @@ abstract class Orders
 
 
         if (!empty($order->getCustomerCode())) {
-            error_log('customerCODE: ' . $order->getCustomerCode());
             $customer = Customer::getCustomerByCode($order->getCustomerCode(), $order->getCustomerZone());
-            error_log('customer: ' . json_encode($customer));
             if (!empty($customer)) {
                 $customerName = $customer->getName() ?? $customerName;
                 $toEmail = $customer->getEmail() ?? '';
@@ -476,7 +476,6 @@ abstract class Orders
             }
         }
 
-        error_log('Email: ' . $customer->getEmail());
         // Crear archivo TXT solo cuando la orden pase a estado "confirmed"
         if ($data->status === Order::STATUS_CONFIRMED) {
             $orderItems = OrderItem::getOrderItems($orderId);
@@ -513,7 +512,8 @@ abstract class Orders
                 if (file_put_contents($pdfPath, $pdfContent) === false)
                     $pdfPath = null;
             } catch (\Throwable $e) {
-                error_log('No se pudo generar el PDF del pedido #' . $order->getId() . ': ' . $e->getMessage());
+                
+                Logger::log('ERROR','No se pudo generar el PDF del pedido #' . $order->getId() . ': ' . $e->getMessage());
                 $pdfPath = null;
             }
         }
@@ -522,10 +522,10 @@ abstract class Orders
             try {
                 Notifications::sendOrderStatusUpdate($order, $toEmail, $statusLabel, $customerName, $pdfPath);
             } catch (\Exception $e) {
-                error_log('No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': ' . $e->getMessage());
+                Logger::log('ERROR','No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': ' . $e->getMessage());
             }
         } else {
-            error_log('No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': el cliente no tiene email registrado');
+            Logger::log('ERROR','No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': el cliente no tiene email registrado');
         }
 
         if (!empty($pdfPath) && file_exists($pdfPath)) {

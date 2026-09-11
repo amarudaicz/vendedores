@@ -19,24 +19,24 @@ abstract class EmailConfiguration {
     /**
      * The username for SMTP authentication.
      */
-    public const SMTP_USERNAME = 'noreply@wizdigitalsolutions.com';
+    public const SMTP_USERNAME = 'noreply@greendor.com.ar';
 
     /**
      * The password for SMTP authentication.
      */
-    public const SMTP_PASSWORD = 'Rf528fx/;7z';
+    public const SMTP_PASSWORD = 'NT:gg;C^2:Qw';
 
     /**
      * The name of the sender.
      */
-    public const SENDER_NAME = 'WIZ DIGITAL SOLUTIONS';
+    public const SENDER_NAME = 'Greendor';
 
     /**
      * The sender email address.
      */
     public const SENDER_EMAIL = self::SMTP_USERNAME;
 
-    public const VENTAS_EMAIL = 'ventas@wizdigitalsolutions.com';
-    public const VENTAS_NAME = 'Ventas NVD';
+    public const VENTAS_EMAIL = 'ventas@greendor.com.ar';
+    public const VENTAS_NAME = 'Ventas Greendor';
 }
 

@@ -134,8 +134,8 @@ abstract class Notifications {
 
         $mailer->Subject = sprintf('Pedido web #%08d %s - %s', $order->getId(), $statusLabel, SiteConfiguration::NAME);
         $mailer->setFrom(EmailConfiguration::SENDER_EMAIL, EmailConfiguration::SENDER_NAME);
-        $mailer->addReplyTo('ventas@nvd.com.ar', 'Ventas NVD');
-        $mailer->addAddress($toEmail, $customerName);
+        $mailer->addReplyTo(EmailConfiguration::VENTAS_EMAIL, 'Ventas Greendor');
+        $mailer->addAddress(EmailConfiguration::VENTAS_EMAIL, $customerName);
 
         if ($pdfPath !== null && file_exists($pdfPath)) {
             $mailer->addAttachment($pdfPath);
