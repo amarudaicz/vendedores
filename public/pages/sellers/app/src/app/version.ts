@@ -1,6 +1,8 @@
+// AUTO-GENERADO — no editar manualmente
+// Generado el 2026-09-16T14:23:25.112Z
 export const VERSION = {
-  version: '1.0.7',
+  version: '1.0.8',
   branch: 'nvd',
-  commit: '0000000',
-  date: '2026-08-21',
+  commit: '18236e2',
+  date: '2026-09-16',
 };
