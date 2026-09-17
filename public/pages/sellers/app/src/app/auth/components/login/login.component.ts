@@ -10,7 +10,7 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { catchError, of } from 'rxjs';
-import { VERSION } from '../../../version';
+import { version } from '../../../version';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +22,7 @@ export class LoginComponent {
   form: FormGroup;
   error: any = null;
   loading = false;
-  version = VERSION;
+  version = version;
 
   constructor(
     private auth: AuthService,

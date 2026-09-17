@@ -1,2 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env sh
+# Auto-bump X.Y.Z con tope 10 en Z e Y:
+#  Z<10 -> Z++ | Z==10 -> Z=0,Y++ | Y==10 -> Y=0,X++  ej. 1.0.10->1.1.0, 1.10.10->2.0.0
+#  Se ejecuta en pre-commit para que el bump quede DENTRO del mismo commit que se pushea.
 node scripts/bump-version.mjs
+git add version.ts

@@ -2,45 +2,64 @@
 // scripts/bump-version.mjs
 // Auto-incrementa el PATCH de version.json y genera version.ts antes de cada push.
 
-import { readFileSync, writeFileSync } from 'fs';
-import { execSync } from 'child_process';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, writeFileSync } from "fs";
+import { execSync } from "child_process";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(__dirname, '..');
+const ROOT = resolve(__dirname, "..");
 
 // --- 1. Leer y bumping version.json ---
-const versionJsonPath = resolve(ROOT, 'version.json');
-const versionData = JSON.parse(readFileSync(versionJsonPath, 'utf-8'));
+const versionFile = resolve(ROOT, "version.ts");
 
-const [major, minor, patch] = versionData.version.split('.').map(Number);
-const newVersion = `${major}.${minor}.${patch + 1}`;
-versionData.version = newVersion;
+let content;
 
-writeFileSync(versionJsonPath, JSON.stringify(versionData, null, 2) + '\n');
+try {
+  content = readFileSync(versionFile, "utf8");
+} catch (err) {
+  console.error(`bump: cannot read ${versionFile}: ${err.message}`);
+  process.exit(1);
+}
 
-// --- 2. Obtener metadata de git ---
-const branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
-const commit = execSync('git rev-parse --short HEAD').toString().trim();
-const date = new Date().toISOString().split('T')[0];
+const regex = /(\d+)\.(\d+)\.(\d+)/;
+const match = content.match(regex);
 
-// --- 3. Generar version.ts ---
-const versionTs = `// AUTO-GENERADO — no editar manualmente
-// Generado el ${new Date().toISOString()}
-export const VERSION = {
-  version: '${newVersion}',
-  branch: '${branch}',
-  commit: '${commit}',
-  date: '${date}',
-};
-`;
+if (!match) {
+  console.error(
+    `bump: invalid version format in ${versionFile}. Expected export const version = 'X.Y.Z'`,
+  );
+  process.exit(1);
+}
 
-const versionTsPath = resolve(ROOT, 'public/pages/sellers/app/src/app/version.ts');
-writeFileSync(versionTsPath, versionTs);
+const oldVersion = `${match[1]}.${match[2]}.${match[3]}`;
+let X = Number(match[1]);
+let Y = Number(match[2]);
+let Z = Number(match[3]);
 
-// --- 4. Stage los archivos y commit ---
-execSync(`git add "${versionJsonPath}" "${versionTsPath}"`);
-execSync(`git commit -m "chore: bump version to ${newVersion}"`);
+if (Z < 10) {
+  Z++;
+} else {
+  Z = 0;
+  if (Y < 10) {
+    Y++;
+  } else {
+    Y = 0;
+    X++;
+  }
+}
 
-console.log(`✅ Version bumped to ${newVersion} (${branch}@${commit})`);
+const newVersion = `${X}.${Y}.${Z}`;
+const nextContent = `export const version = '${newVersion}'\n`;
+
+const versionTsPath = resolve(
+  ROOT,
+  "public/pages/sellers/app/src/app/version.ts",
+);
+writeFileSync(versionFile, nextContent);
+writeFileSync(versionTsPath, nextContent);
+
+// --- 4. Stage los archivos ---
+execSync(`git add "${versionFile}" "${versionTsPath}"`);
+
+console.log(`✅ Version bumped to ${newVersion}`);

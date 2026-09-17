@@ -22,9 +22,14 @@ abstract class SessionConfiguration {
     public const SESSION_COOKIE_SECURE = '0';
 
     /**
-     * The session cookie lifetime in minutes.
+     * The session cookie lifetime in seconds.
      */
-    public const SESSION_COOKIE_LIFETIME = '1440';
+    public const SESSION_COOKIE_LIFETIME = '604800'; // 1 week
+
+    /**
+     * The session max lifetime in seconds.
+     */
+    public const SESSION_GC_MAXLIFETIME = '604800'; // 1 week
 
     /**
      * Indicates whether the session cookie should be accessible only through HTTP (1 for true, 0 for false).
@@ -59,6 +64,7 @@ abstract class SessionConfiguration {
         ini_set('session.cookie_domain', self::SESSION_COOKIE_DOMAIN);
         ini_set('session.cookie_secure', self::SESSION_COOKIE_SECURE);
         ini_set('session.cookie_lifetime', self::SESSION_COOKIE_LIFETIME);
+        ini_set('session.gc_maxlifetime', self::SESSION_GC_MAXLIFETIME);
         ini_set('session.cookie_httponly', self::SESSION_COOKIE_HTTPONLY);
         ini_set('session.cookie_path', self::SESSION_COOKIE_PATH);
         ini_set('session.cookie_samesite', self::SESSION_COOKIE_SAMESITE);
