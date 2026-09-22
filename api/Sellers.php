@@ -102,6 +102,16 @@ abstract class Sellers
         if (!empty($data->paymentMethod))
             $order->setPaymentMethod($data->paymentMethod);
 
+        if (isset($data->idTransporte))
+            $order->setIdTransporte($data->idTransporte ? (int)$data->idTransporte : null);
+
+        if (!empty($data->deliveryMethod))
+            $order->setDeliveryMethod($data->deliveryMethod);
+
+           if (!empty($data->discount))
+            $order->setDiscount($data->discount);
+    
+    
         $order->setCreatedAt(date('Y-m-d H:i:s'));
         $order->setUpdatedAt(date('Y-m-d H:i:s'));
 

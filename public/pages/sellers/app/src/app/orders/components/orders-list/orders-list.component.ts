@@ -27,8 +27,12 @@ import { SellersService } from '../../../shared/services/sellers/sellers.service
 import { AuthService } from '../../../auth/services/auth.service';
 import { SearchClientComponent } from '../../../shared/components/search-client/search-client.component';
 import { Seller } from '../../../interfaces/seller';
-import { Order, StatusKey, STATUS_FLOW, STATUS_LABELS } from '../../../interfaces/Order';
-
+import {
+  Order,
+  StatusKey,
+  STATUS_FLOW,
+  STATUS_LABELS,
+} from '../../../interfaces/Order';
 
 @Component({
   selector: 'app-orders-list',
@@ -61,6 +65,7 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
       dateTo: [''],
       sellerCode: [''],
       customerCode: [''],
+      pedidosWeb: [false],
     });
   }
 
@@ -77,7 +82,6 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
 
   readonly traduceStatus = STATUS_LABELS;
 
-
   paginator: any = {
     page: 1,
     totalPages: 0,
@@ -87,7 +91,7 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
   ngOnInit() {
     this.fetchOrders();
 
-    if (this.authService.isAdmin()) { 
+    if (this.authService.isAdmin()) {
       this.sellersService.getSellers().subscribe((res) => {
         this.sellers = res;
       });
@@ -150,7 +154,9 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
     ) as StatusKey[];
 
     if (!this.authService.isAdmin()) {
-      return availableStatuses.filter((s) => s === 'confirmed' || s === 'pending');
+      return availableStatuses.filter(
+        (s) => s === 'confirmed' || s === 'pending',
+      );
     }
 
     return availableStatuses;
@@ -217,9 +223,7 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
       .subscribe((res) => {
         if (!res) return;
 
-        this.filterOrders = this.filterOrders?.filter(
-          (o) => o.id !== order.id,
-        );
+        this.filterOrders = this.filterOrders?.filter((o) => o.id !== order.id);
 
         this.alert.showAlert(
           `Orden #${order.id} eliminada correctamente`,
@@ -250,14 +254,13 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
     const allowedTransitions = STATUS_FLOW[currentStatus] ?? [];
     if (!allowedTransitions.includes(status)) {
       const fromLabel = this.traduceStatus[currentStatus] ?? currentStatus;
-      const toLabel   = this.traduceStatus[status] ?? status;
+      const toLabel = this.traduceStatus[status] ?? status;
       this.alert.showAlert(
         `Transición no permitida: no se puede pasar de "${fromLabel}" a "${toLabel}".`,
         'warning',
       );
       return;
     }
-
 
     // Configuración base compartida
     const baseConfig = {
@@ -275,7 +278,8 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
       this.confirmationService.confirm({
         ...baseConfig,
         header: 'Confirmar envío al Sistema de Gestión',
-        message: 'Confirmá el envío de la <strong>Nota de Pedido</strong> al Sistema de Gestión.',
+        message:
+          'Confirmá el envío de la <strong>Nota de Pedido</strong> al Sistema de Gestión.',
         icon: 'pi pi-send',
       });
       return;
@@ -286,7 +290,8 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
       this.confirmationService.confirm({
         ...baseConfig,
         header: 'PEDIDO ENVIADO',
-        message: 'Se enviará una <strong>notificación al cliente</strong> informando que su pedido está en camino.',
+        message:
+          'Se enviará una <strong>notificación al cliente</strong> informando que su pedido está en camino.',
         icon: 'pi pi-truck',
       });
       return;
@@ -326,10 +331,15 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
           'success',
         );
 
-        this.fetchOrders(this.filterForm.value, this.paginator.page);
+        this.fetchOrders(
+          {
+            ...this.filterForm.value,
+            pedidosWeb: this.filterForm.value.pedidosWeb ? 1 : 0,
+          },
+          this.paginator.page,
+        );
       });
   }
-
 
   getTranslatedStatus(status: StatusKey): string {
     return this.traduceStatus[status];
@@ -397,6 +407,11 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
       filters.customer_code = formValue.customerCode;
     }
 
+    if (formValue.pedidosWeb) {
+      filters.pedidosWeb = '1';
+      delete filters.sellerCode;
+    }
+
     this.fetchOrders(filters, 1);
   }
 
@@ -409,6 +424,7 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
       dateTo: '',
       sellerCode: '',
       customerCode: '',
+      pedidosWeb: false,
     });
     this.fetchOrders({}, 1);
   }

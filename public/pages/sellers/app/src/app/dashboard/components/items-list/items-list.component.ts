@@ -239,13 +239,27 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
     //   return;
     // }
 
-    this.itemsFormArray.push(
-      this.fb.group({
-        product: [formValue.product],
-        quantity: [formValue.quantity],
-        discount: [formValue.discount],
-      }),
+    const existingIndex = this.itemsFormArray.controls.findIndex(
+      (control) =>
+        control.get('product')?.value?.code === formValue.product.code ||
+        (control.get('product')?.value?.id && control.get('product')?.value?.id === formValue.product.id)
     );
+
+    if (existingIndex !== -1) {
+      const existingControl = this.itemsFormArray.at(existingIndex);
+      const currentQty = Number(existingControl.get('quantity')?.value || 0);
+      existingControl.patchValue({
+        quantity: currentQty + Number(formValue.quantity),
+      });
+    } else {
+      this.itemsFormArray.push(
+        this.fb.group({
+          product: [formValue.product],
+          quantity: [formValue.quantity],
+          discount: [formValue.discount],
+        }),
+      );
+    }
 
     this.formNewProduct.patchValue(
       {
@@ -332,5 +346,23 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
 
   getPriceArs(product: Product) {
     return this.globalConfig.cotizacion ? product.price * product.arsUsd: product.price;
+  }
+
+  getDiscountedPriceArs(item: any) {
+    const product = item.get('product')?.value;
+    if (!product) return 0;
+    const basePrice = this.getPriceArs(product);
+    const itemDiscount = item.get('discount')?.value || 0;
+    const generalDiscount = this.form.get('discount')?.value || 0;
+    return basePrice * (1 - itemDiscount / 100) * (1 - generalDiscount / 100);
+  }
+
+  getDiscountedPriceUsd(item: any) {
+    const product = item.get('product')?.value;
+    if (!product) return 0;
+    const basePrice = product.price;
+    const itemDiscount = item.get('discount')?.value || 0;
+    const generalDiscount = this.form.get('discount')?.value || 0;
+    return basePrice * (1 - itemDiscount / 100) * (1 - generalDiscount / 100);
   }
 }

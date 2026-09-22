@@ -5,6 +5,7 @@ export interface Customer{
 
     zone:number,
     price_list:number,
+    descuento:number,
     deleted:1|0,
     seller_code:number,
     seller_name?:string

@@ -98,11 +98,18 @@ class Order implements JsonSerializable
      */
     private ?float $total;
 
-
     /**
      * @var float|null
      */
     private ?float $cotizacion;
+
+    private ?float $discount;
+
+    private ?int $idTransporte;
+
+    private ?string $deliveryMethod;
+
+    private ?array $transporte;
 
     /**
      *
@@ -123,6 +130,9 @@ class Order implements JsonSerializable
         $this->guest = null;
         $this->total = 0.0;
         $this->cotizacion = 0.0;
+        $this->discount = null;
+        $this->idTransporte = null;
+        $this->deliveryMethod = null;
     }
 
     /**
@@ -352,14 +362,70 @@ class Order implements JsonSerializable
         return $this;
     }
 
-    /**
-     * @param float|null $cotizacion
-     * @return $this
-     */
+
     public function setCotizacion(?float $cotizacion): Order
     {
         $this->cotizacion = $cotizacion;
         return $this;
+    }
+
+    public function setDiscount(?float $discount): Order
+    {
+        $this->discount = $discount;
+        return $this;
+    }
+
+    public function getDiscount(): ?float
+    {
+        return $this->discount;
+    }
+
+    public function getIdTransporte(): ?int
+    {
+        return $this->idTransporte;
+    }
+
+    public function setIdTransporte(?int $idTransporte): Order
+    {
+        $this->idTransporte = $idTransporte;
+        return $this;
+    }
+
+    public function getDeliveryMethod(): ?string
+    {
+        return $this->deliveryMethod;
+    }
+
+    public function setDeliveryMethod(?string $deliveryMethod): Order
+    {
+        $this->deliveryMethod = $deliveryMethod;
+        return $this;
+    }
+
+    public function getTransporte(): ?array
+    {
+        return $this->transporte;
+    }
+
+    public function setTransporte(?array $transporte): Order
+    {
+        $this->transporte = $transporte;
+        return $this;
+    }
+
+    public function __get(string $name)
+    {
+        if (property_exists($this, $name)) {
+            return $this->$name;
+        }
+        return null;
+    }
+
+    public function __set(string $name, $value): void
+    {
+        if (property_exists($this, $name)) {
+            $this->$name = $value;
+        }
     }
 
     /**
@@ -407,6 +473,7 @@ class Order implements JsonSerializable
        o.orden_cliente_code AS customer_code,
        o.orden_cliente_zone AS customer_zone,
        o.orden_guest_id AS guest_id,
+       o.orden_discount AS discount,
        c.cliente_name AS customer_name,
        g.guest_name AS guest_name,
        SUM(oi.orden_item_price * oi.orden_item_quantity) AS total
@@ -475,6 +542,7 @@ ORDER BY o.orden_id DESC";
        o.orden_cliente_code AS customer_code,
        o.orden_cliente_zone AS customer_zone,
        o.orden_guest_id AS guest_id,
+       o.orden_discount AS discount,
        c.cliente_name AS customer_name,
        g.guest_name AS guest_name
 FROM ordenes o
@@ -542,6 +610,7 @@ WHERE DATE(o.orden_created_at) BETWEEN ? AND ?";
        o.orden_cliente_code AS customer_code,
        o.orden_cliente_zone AS customer_zone,
        o.orden_guest_id AS guest_id,
+       o.orden_discount AS discount,
        SUM(oi.orden_item_price * oi.orden_item_quantity) AS total
 FROM ordenes o
     LEFT JOIN ordenes_items oi ON o.orden_id = oi.orden_item_orden_id
@@ -598,8 +667,14 @@ GROUP BY o.orden_id";
         o.orden_cliente_zone AS customer_zone,
         o.orden_guest_id AS guest_id,
         o.orden_vendedor_code AS seller_code,
-        o.orden_cotizacion AS cotizacion
+        o.orden_cotizacion AS cotizacion,
+        o.orden_transporte_id AS id_transporte,
+        o.orden_delivery_method AS delivery_method,
+        t.transporte_id AS idTransporte,
+        t.transporte_nombre AS nombreTransporte
         FROM ordenes o
+        LEFT JOIN transportes t 
+        ON o.orden_transporte_id = t.transporte_id
         WHERE o.orden_id = ?";
 
         $stmt = $conn->prepare($query);
@@ -625,6 +700,11 @@ GROUP BY o.orden_id";
             $order->setGuestId($row["guest_id"]);
             $order->setSellerCode($row["seller_code"]);
             $order->setCotizacion($row["cotizacion"]);
+            $order->setDeliveryMethod($row['delivery_method']);
+            $order->setTransporte([
+                'id' => $row['idTransporte'],
+                'nombre' => $row['nombreTransporte']
+            ]);
         }
 
         $result->free();
@@ -641,7 +721,25 @@ GROUP BY o.orden_id";
     {
         $conn = Connection::getConn();
 
-        $query = "INSERT INTO ordenes (orden_payment_method, orden_note, orden_status, orden_created_at, orden_updated_at, orden_cliente_code, orden_cliente_zone, orden_guest_id, orden_cotizacion, orden_vendedor_code) VALUES (?,?,?,NOW(),NOW(),?,?,?,?,?)";
+        $now = new \DateTime('now', new \DateTimeZone('America/Argentina/Buenos_Aires'));
+        $createdAt = $now->format('Y-m-d H:i:s');
+        $updatedAt = $createdAt;
+
+        $query = "INSERT INTO ordenes (
+        orden_payment_method, 
+        orden_note, 
+        orden_status, 
+        orden_cliente_code, 
+        orden_cliente_zone, 
+        orden_guest_id, 
+        orden_cotizacion, 
+        orden_vendedor_code, 
+        orden_discount, 
+        orden_transporte_id, 
+        orden_delivery_method,
+        orden_created_at, 
+        orden_updated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
         $stmt = $conn->prepare($query);
 
         if (!$stmt) {
@@ -649,7 +747,7 @@ GROUP BY o.orden_id";
         }
 
         $stmt->bind_param(
-            'sssiiiid',
+            'sssiiiiddisss',
             $order->paymentMethod,
             $order->note,
             $order->status,
@@ -658,6 +756,11 @@ GROUP BY o.orden_id";
             $order->guestId,
             $order->cotizacion,
             $seller_code,
+            $order->discount,
+            $order->idTransporte,
+            $order->deliveryMethod,
+            $createdAt,
+            $updatedAt
         );
 
         $stmt->execute();
@@ -673,7 +776,7 @@ GROUP BY o.orden_id";
     {
         $conn = Connection::getConn();
 
-        $status = trim((string)($order->status ?? 'pending'));
+        $status = trim((string) ($order->status ?? 'pending'));
 
         if ($status === '') {
             $status = 'pending';
@@ -704,6 +807,9 @@ GROUP BY o.orden_id";
             o.orden_cliente_code AS customer_code,
             o.orden_cliente_zone AS customer_zone,
             o.orden_guest_id AS guest_id,
+            o.orden_discount AS discount,
+            o.orden_transporte_id AS id_transporte,
+            o.orden_delivery_method AS delivery_method,
             COALESCE(c.cliente_name, g.guest_name) AS customer_name,
             COALESCE(c.cliente_dni, g.guest_tin) AS customer_dni,
             s.vendedor_name AS seller_name,
@@ -725,10 +831,15 @@ GROUP BY o.orden_id";
             $types .= "i";
         }
 
+        // Filtro pedidos web: solo órdenes sin vendedor asignado
+        if (!empty($filters['pedidosWeb'])) {
+            $query .= " AND o.orden_vendedor_code IS NULL";
+        }
+
         // Filtro por búsqueda general (ID de orden o nombre de cliente)
         if (!empty($filters['search'])) {
             $query .= " AND (o.orden_id = ? OR c.cliente_name LIKE ? OR c.cliente_dni LIKE ?)";
-            $searchId = is_numeric($filters['search']) ? (int)$filters['search'] : 0;
+            $searchId = is_numeric($filters['search']) ? (int) $filters['search'] : 0;
             $searchTerm = '%' . $filters['search'] . '%';
             $params[] = $searchId;
             $params[] = $searchTerm;
@@ -801,10 +912,15 @@ GROUP BY o.orden_id";
             $countTypes .= "i";
         }
 
+        // Filtro pedidos web: solo órdenes sin vendedor asignado
+        if (!empty($filters['pedidosWeb'])) {
+            $countQuery .= " AND o.orden_vendedor_code IS NULL";
+        }
+
         // Aplicar los mismos filtros en el conteo
         if (!empty($filters['search'])) {
             $countQuery .= " AND (o.orden_id = ? OR c.cliente_name LIKE ? OR c.cliente_dni LIKE ?)";
-            $searchId = is_numeric($filters['search']) ? (int)$filters['search'] : 0;
+            $searchId = is_numeric($filters['search']) ? (int) $filters['search'] : 0;
             $searchTerm = '%' . $filters['search'] . '%';
             $countParams[] = $searchId;
             $countParams[] = $searchTerm;

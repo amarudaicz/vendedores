@@ -68,6 +68,7 @@ abstract class OrderPdf
         foreach ($items as $item) {
             $subtotal = (float)$item->getPrice() * (float)$item->getQuantity();
             $rows .= '<tr>'
+                . '<td style="border:1px solid #ccc;padding:6px;">' . htmlspecialchars((string)$item->getProductCode()) . '</td>'
                 . '<td style="border:1px solid #ccc;padding:6px;">' . htmlspecialchars((string)$item->getDescription()) . '</td>'
                 . '<td style="border:1px solid #ccc;padding:6px;text-align:center;">' . $item->getQuantity() . '</td>'
                 . '<td style="border:1px solid #ccc;padding:6px;text-align:right;">' . number_format($item->getPrice(), 2) . '</td>'
@@ -92,7 +93,8 @@ abstract class OrderPdf
         <table width="100%" style="margin-top:12px;border-collapse:collapse;font-size:9pt;">
             <thead>
                 <tr>
-                    <th style="border:1px solid #ccc;padding:6px;text-align:left;">Item</th>
+                    <th style="border:1px solid #ccc;padding:6px;text-align:left;">Cód.</th>
+                    <th style="border:1px solid #ccc;padding:6px;text-align:left;">Descripcion</th>
                     <th style="border:1px solid #ccc;padding:6px;">Cant.</th>
                     <th style="border:1px solid #ccc;padding:6px;">Pr.U. $</th>
                     <th style="border:1px solid #ccc;padding:6px;">Tot. $</th>
@@ -106,8 +108,9 @@ abstract class OrderPdf
             </tr>
         </table>
         <div style="margin-top:12px;font-size:9pt;">
-            ' . ($order->getNote() !== '' ? '<div><strong>Nota:</strong> ' . htmlspecialchars($order->getNote()) . '</div>' : '') . '
-            ' . ($order->getPaymentMethod() !== '' ? '<div><strong>M&eacute;todo de pago:</strong> ' . htmlspecialchars($order->getPaymentMethod()) . '</div>' : '') . '
+            ' . ($order->getPaymentMethod() !== '' ? '<div><strong>Método de pago:</strong> ' . htmlspecialchars($order->getPaymentMethod()) . '</div>' : '') . '
+            ' . ($order->getDeliveryMethod() !== '' ? '<div><strong>Método de envío:</strong> ' . htmlspecialchars($order->getDeliveryMethod()) . '</div>' : '') . '
+            ' . ($order->getDeliveryMethod() !== '' ? '<div><strong>Transporte:</strong> ' . htmlspecialchars($order->getTransporte()['nombre']) . '</div>' : '') . '
         </div>';
     }
 }

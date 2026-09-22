@@ -497,8 +497,8 @@ abstract class Orders
                     }
                     $fileContent .= sprintf("4;%s\r\n", $order->getNote());
                     $fileContent .= sprintf("5;%s\r\n", $order->getPaymentMethod());
-                    $fileContent .= "6;\r\n";
-                    $fileContent .= "7;\r\n";
+                    $fileContent .= sprintf("6;%s\r\n", $order->getTransporte()['id']);
+                    $fileContent .= sprintf("7;%s\r\n", $order->getDeliveryMethod());
                     $fileContent .= sprintf("8;%s\r\n", $dolar);
 
                     if (file_put_contents($filename, $fileContent) === false)

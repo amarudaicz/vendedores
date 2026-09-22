@@ -1,34 +1,41 @@
 <ng-container *ngIf="!orderId">
-<h1 class="text-2xl font-bold mb-4">Generar Orden</h1>
-<div class="shadow-lg bg-white rounded-lg w-full p-4">
-  <form [formGroup]="formNewOrder" class="space-y-4" (ngSubmit)="submitForm()">
-    <div class="flex flex-col lg:flex-row gap-5">
-      <div class="flex-1 max-w-lg flex flex-col gap-y-4">
-        <!-- Información del Cliente -->
+  <h1 class="text-2xl font-bold mb-4">Generar Orden</h1>
+  <div class="shadow-lg bg-white rounded-lg w-full p-4">
+    <form
+      [formGroup]="formNewOrder"
+      class="space-y-4"
+      (ngSubmit)="submitForm()"
+    >
+      <div class="flex flex-col lg:flex-row gap-5">
+        <div class="flex-1 flex flex-col gap-y-4">
+          <!-- Información del Cliente -->
 
-        <div class="">
-          <app-search-client
-            [form]="formNewOrder"
-            (customerEmitter)="setCustomer($event)"
-          ></app-search-client>
-          <div
-            class="flex gap-x-5 p-2 text-center border mt-2 rounded shadow-lg"
-            *ngIf="getCustomer()"
-          >
-            <p class="font-bold flex-1 text-nowrap">
-              <span class="font-normal">Cod: </span> {{ getCustomer().code }}
-            </p>
-            <p class="font-bold flex-1 text-nowrap">
-              <span class="font-normal">DNI: </span> {{ getCustomer().dni }}
-            </p>
-            <p class="font-bold flex-1 text-nowrap">
-              <span class="font-normal">Zona:</span> {{ getCustomer().zone }}
-            </p>
+          <div class="">
+            <app-search-client
+              [form]="formNewOrder"
+              (customerEmitter)="setCustomer($event)"
+            ></app-search-client>
+            <div
+              class="flex flex-wrap gap-x-5 p-2  border mt-2 rounded shadow-lg"
+              *ngIf="getCustomer()"
+            >
+              <p class="font-bold flex-1 text-nowrap">
+                <span class="font-normal">Cod: </span> {{ getCustomer().code }}
+              </p>
+              <p class="font-bold flex-1 text-nowrap">
+                <span class="font-normal">DNI: </span> {{ getCustomer().dni }}
+              </p>
+              <p class="font-bold flex-1 text-nowrap">
+                <span class="font-normal">Zona:</span> {{ getCustomer().zone }}
+              </p>
+               <p class="font-bold flex-1 text-nowrap">
+                <span class="font-normal">Descuento:</span> {{ getCustomer().descuento }}%
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div class="flex gap-3">
-          <!-- <div class="flex-1">
+          <div class="flex gap-3">
+            <!-- <div class="flex-1">
             <label for="moneda" class="block font-medium">Moneda</label>
 
             <div class="relative">
@@ -60,33 +67,32 @@
             </div>
           </div> -->
 
-          <div
-            class="flex-1"
-            *ngIf="globalConfig.cotizacion"
-          >
-            <label for="usdValue" class="block font-medium">Cotización</label>
-            <div class="p-2 border mt-1 block w-full rounded-md bg-white shadow-sm" [ngClass]="{'border-yellow-500 bg-yellow-50': !dolar}"> 
-              {{dolar || 'Cargando..'}}
+            <div class="flex-1" *ngIf="globalConfig.cotizacion">
+              <label for="usdValue" class="block font-medium">Cotización</label>
+              <div
+                class="p-2 border mt-1 block w-full rounded-md bg-white shadow-sm"
+                [ngClass]="{ 'border-yellow-500 bg-yellow-50': !dolar }"
+              >
+                {{ dolar || "Cargando.." }}
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Detalles de la Orden -->
-        <!-- <div>
-          <label for="orderDescription" class="block font-medium"
-            >Observaciones</label
-          >
-          <textarea
-            id="orderDescription"
-            formControlName="note"
-            rows="4"
-            class="p-3 border border-slate-400 mt-1 block w-full rounded-md shadow-sm"
-          ></textarea>
-        </div> -->
+          <div>
+            <label for="orderDescription" class="block font-medium"
+              >Observaciones</label
+            >
+            <textarea
+              id="orderDescription"
+              formControlName="note"
+              rows="4"
+              class="p-3 border border-slate-400 mt-1 block w-full rounded-md shadow-sm"
+            ></textarea>
+          </div>
 
-        <div class="flex flex-wrap gap-3">
-          <!-- Métodos de Pago -->
-          <!-- <div class="flex-1">
+          <div class="flex flex-wrap gap-3">
+            <!-- Métodos de Pago -->
+            <!-- <div class="flex-1">
             <label for="paymentMethod" class="block font-medium text-nowrap"
               >Método de Pago</label
             >
@@ -121,50 +127,74 @@
               </div>
             </div>
           </div> -->
-<!-- 
-          <div class="flex-1">
-            <label for="discount" class="block text-nowrap font-medium"
-              >Descuento General</label
-            >
-            <div class="relative">
-              <input
-                (keydown.enter)="preventEnter($event)"
-                type="number"
-                formControlName="discount"
-                class="relative h-[49px] px-2 pr-5 border border-slate-400 mt-1 block w-full rounded-md shadow-sm"
-              />
-              <i
-                class="icon-[icon-park-outline--percentage] text-gray-400 text-xl absolute top-1/2 -translate-y-1/2 right-8"
-              ></i>
+
+            <!-- <div class="flex-1">
+              <label for="discount" class="block text-nowrap font-medium"
+                >Descuento General</label
+              >
+              <div class="relative">
+                <input
+                  (keydown.enter)="preventEnter($event)"
+                  type="number"
+                  formControlName="discount"
+                  class="relative h-[49px] px-2 pr-5 border border-slate-400 mt-1 block w-full rounded-md shadow-sm"
+                />
+                <i
+                  class="icon-[icon-park-outline--percentage] text-gray-400 text-xl absolute top-1/2 -translate-y-1/2 right-8"
+                ></i>
+              </div>
+            </div> -->
+          </div>
+
+          <!-- Transporte y Método de Envío -->
+          <div class="flex flex-wrap gap-3">
+            <!-- Transporte dinámico desde API -->
+            <div class="flex-1">
+              <app-combo-transportes
+                [form]="formNewOrder"
+                controlName="idTransporte"
+              ></app-combo-transportes>
             </div>
-          </div> -->
+
+            <!-- Método de envío con PrimeNG -->
+            <div class="flex-1">
+              <app-combo-metodo-envio
+                [form]="formNewOrder"
+                controlName="deliveryMethod"
+              ></app-combo-metodo-envio>
+            </div>
+          </div>
+
         </div>
+
+        <div class="w-full my-2 h-[1px] bg-black md:hidden"></div>
+        <app-items-list
+          [form]="formNewOrder"
+          [customer]="getCustomer()"
+          class="flex-1"
+          (itemsEmitter)="setItems($event)"
+        ></app-items-list>
       </div>
 
-      <div class="w-full my-2 h-[1px] bg-black md:hidden"></div>
-      <app-items-list
-        [form]="formNewOrder"
-        [customer]="getCustomer()"
-        class="flex-1"
-        (itemsEmitter)="setItems($event)"
-      ></app-items-list>
-    </div>
-
-    <!-- Botón de Envío -->
-    <div class="pt-4">
-      <button
-        [disabled]="loadingForm"
-        type="submit"
-        [ngClass]="
-          loadingForm ? 'bg-neutral-500' : 'bg-black hover:bg-neutral-900'
-        "
-        class="w-full transition-all text-white font-medium py-2 px-4 rounded-md"
-      >
-        Generar Orden
-      </button>
-    </div>
-  </form>
-</div>
+      <!-- Botón de Envío -->
+      <div class="pt-4">
+        <button
+          [disabled]="loadingForm"
+          type="submit"
+          [ngClass]="
+            loadingForm ? 'bg-neutral-500' : 'bg-black hover:bg-neutral-900'
+          "
+          class="w-full transition-all text-white font-medium py-2 px-4 rounded-md"
+        >
+          Generar Orden
+        </button>
+      </div>
+    </form>
+  </div>
 </ng-container>
 
-<app-success-order *ngIf="orderId" [orderId]="orderId" (reset)="resetForm()"></app-success-order>
+<app-success-order
+  *ngIf="orderId"
+  [orderId]="orderId"
+  (reset)="resetForm()"
+></app-success-order>

@@ -94,16 +94,18 @@ if (isset($router)) {
     $router->get('/sellers/dolar', 'api\Sellers::getDolar');
     $router->put('/sellers/dolar', 'api\Sellers::updateDolar');
 
-    //BALANCES!!!
+    //BALANCES!!! 
     $router->get('/payments', 'api\Payments::getPayments');
 
+    // Transportes API
+    $router->get('/transportes', 'api\Transportes::getTransportes');
 
     // $router->post('/pagos', 'api\pagos::crear');
 
-    $router->get('/pricing', function () {
-        $controller = new Pricing();
-        $controller->obtenerPreciosPorTarjeta();
-    });
+    // $router->get('/pricing', function () {
+    //     $controller = new Pricing();
+    //     $controller->obtenerPreciosPorTarjeta();
+    // });
 
 }
   

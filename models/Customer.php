@@ -68,6 +68,11 @@ class Customer implements JsonSerializable
     private string $updatedAt;
 
     /**
+     * @var float
+     */
+    private float $descuento;
+
+    /**
      *
      */
     public function __construct()
@@ -83,6 +88,7 @@ class Customer implements JsonSerializable
         $this->updatedAt = '';
         $this->sellerCode = 0;
         $this->email = '';
+        $this->descuento = 0.0;
     }
 
     /**
@@ -170,6 +176,17 @@ class Customer implements JsonSerializable
     public function setEmail(string|null $email): Customer
     {
         $this->email = $email;
+        return $this;
+    }
+
+    public function getDescuento(): float
+    {
+        return $this->descuento;
+    }
+
+    public function setDescuento(float $descuento): Customer
+    {
+        $this->descuento = $descuento;
         return $this;
     }
 
@@ -301,7 +318,8 @@ class Customer implements JsonSerializable
        cliente_price_list AS price_list,
        cliente_email AS email,
        cliente_deleted AS deleted,
-       cliente_updated_at AS updated_at
+       cliente_updated_at AS updated_at,
+       cliente_descuento AS descuento
 FROM clientes";
 
         $stmt = $conn->prepare($query);
@@ -324,6 +342,7 @@ FROM clientes";
             $customer->setDeleted($row["deleted"]);
             $customer->setUpdatedAt($row["updated_at"]);
             $customer->setEmail($row["email"] ?? null);
+            $customer->setDescuento((float)($row["descuento"] ?? 0));
             $customers[] = $customer;
         }
 
@@ -346,6 +365,7 @@ FROM clientes";
                 c.cliente_email AS email,
                 c.cliente_deleted AS deleted,
                 c.cliente_updated_at AS updated_at,
+                c.cliente_descuento AS descuento,
                 c.cliente_vendedor_code AS seller_code,
                 s.vendedor_name AS seller_name
             FROM 
@@ -424,7 +444,8 @@ FROM clientes";
        cliente_price_list AS price_list,
        cliente_email AS email,
        cliente_deleted AS deleted,
-       cliente_updated_at AS updated_at
+       cliente_updated_at AS updated_at,
+       cliente_descuento AS descuento
 FROM clientes
 WHERE cliente_updated_at != ?";
 
@@ -450,6 +471,7 @@ WHERE cliente_updated_at != ?";
             $customer->setDeleted($row["deleted"]);
             $customer->setUpdatedAt($row["updated_at"]);
             $customer->setEmail($row["email"] ?? null);
+            $customer->setDescuento((float)($row["descuento"] ?? 0));
             $customers[] = $customer;
         }
 
@@ -479,7 +501,8 @@ WHERE cliente_updated_at != ?";
        cliente_price_list AS price_list,
        cliente_email AS email,
        cliente_deleted AS deleted,
-       cliente_updated_at AS updated_at
+       cliente_updated_at AS updated_at,
+       cliente_descuento AS descuento
         FROM clientes WHERE cliente_code = ? AND cliente_zone = ?";
 
         $stmt = $conn->prepare($query);
@@ -504,6 +527,7 @@ WHERE cliente_updated_at != ?";
             $customer->setDeleted($row["deleted"]);
             $customer->setUpdatedAt($row["updated_at"]);
             $customer->setEmail($row["email"] ?? null);
+            $customer->setDescuento((float)($row["descuento"] ?? 0));
         }
 
         $result->free();
@@ -529,7 +553,8 @@ WHERE cliente_updated_at != ?";
        cliente_price_list AS price_list,
        cliente_email AS email,
        cliente_deleted AS deleted,
-       cliente_updated_at AS updated_at
+       cliente_updated_at AS updated_at,
+       cliente_descuento AS descuento
 FROM clientes WHERE cliente_dni = ? AND cliente_deleted = FALSE";
 
         $stmt = $conn->prepare($query);
@@ -554,6 +579,7 @@ FROM clientes WHERE cliente_dni = ? AND cliente_deleted = FALSE";
             $customer->setDeleted($row["deleted"]);
             $customer->setUpdatedAt($row["updated_at"]);
             $customer->setEmail($row["email"] ?? null);
+            $customer->setDescuento((float)($row["descuento"] ?? 0));
         }
 
         $result->free();
@@ -577,13 +603,14 @@ SET cliente_name=?,
     cliente_password_hash=?,
     cliente_price_list=?,
     cliente_deleted=?,
-    cliente_updated_at=?
+    cliente_updated_at=?,
+    cliente_descuento=?
 WHERE cliente_code = ? AND cliente_zone = ?";
 
         $stmt = $conn->prepare($query);
 
         $stmt->bind_param(
-            "sssssiisii",
+            "sssssiisdii",
             $customer->name,
             $customer->dni,
             $customer->zone,
@@ -592,6 +619,7 @@ WHERE cliente_code = ? AND cliente_zone = ?";
             $customer->priceList,
             $customer->deleted,
             $customer->updatedAt,
+            $customer->descuento,
             $customer->code,
             $customer->zone
         );
@@ -619,12 +647,12 @@ WHERE cliente_code = ? AND cliente_zone = ?";
             $updateQuery = "UPDATE clientes SET 
                 cliente_name = ?, cliente_dni = ?, cliente_zone = ?, cliente_password_salt = ?, 
                 cliente_password_hash = ?, cliente_price_list = ?, cliente_deleted = ?, 
-                cliente_updated_at = ?, cliente_vendedor_code = ?
+                cliente_updated_at = ?, cliente_vendedor_code = ?, cliente_descuento = ?
             WHERE cliente_code = ? AND cliente_zone = ?";
 
             $updateStmt = $conn->prepare($updateQuery);
             $updateStmt->bind_param(
-                "sssssiissii",
+                "sssssiissdii",
                 $customer->name,
                 $customer->dni,
                 $customer->zone,
@@ -634,6 +662,7 @@ WHERE cliente_code = ? AND cliente_zone = ?";
                 $customer->deleted,
                 $customer->updatedAt,
                 $customer->sellerCode,
+                $customer->descuento,
                 $customer->code,
                 $customer->zone
             );
@@ -641,12 +670,12 @@ WHERE cliente_code = ? AND cliente_zone = ?";
             $updateStmt->close();
         } else {
             // INSERT si no existe
-            $insertQuery = "INSERT INTO clientes (cliente_code, cliente_name, cliente_dni, cliente_zone, cliente_password_salt, cliente_password_hash, cliente_price_list, cliente_deleted, cliente_updated_at, cliente_vendedor_code)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $insertQuery = "INSERT INTO clientes (cliente_code, cliente_name, cliente_dni, cliente_zone, cliente_password_salt, cliente_password_hash, cliente_price_list, cliente_deleted, cliente_updated_at, cliente_vendedor_code, cliente_descuento)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $insertStmt = $conn->prepare($insertQuery);
             $insertStmt->bind_param(
-                "ississiiss",
+                "ississiissd",
                 $customer->code,
                 $customer->name,
                 $customer->dni,
@@ -656,7 +685,8 @@ WHERE cliente_code = ? AND cliente_zone = ?";
                 $customer->priceList,
                 $customer->deleted,
                 $customer->updatedAt,
-                $customer->sellerCode
+                $customer->sellerCode,
+                $customer->descuento
             );
             $insertStmt->execute();
             $insertStmt->close();

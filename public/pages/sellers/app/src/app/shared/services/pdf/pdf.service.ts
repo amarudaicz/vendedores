@@ -3,7 +3,7 @@ import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 import html2pdf from 'html2pdf.js';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PdfService {
   private renderer: Renderer2;
@@ -20,11 +20,11 @@ export class PdfService {
     }
 
     const options = {
-      margin:       10,
-      filename:     `${fileName}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      margin: 5,
+      filename: `${fileName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 1 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     };
 
     html2pdf().from(content).set(options).save();

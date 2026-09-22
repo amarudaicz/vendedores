@@ -77,6 +77,24 @@
             </select>
           </div>
 
+          <!-- Pedidos Web (sin vendedor asignado) — solo admin -->
+          <div class="lg:col-span-2 flex flex-col justify-end" *ngIf="authService.isAdmin()">
+            <label class="block text-xs font-medium text-gray-700 mb-1">&nbsp;</label>
+            <label
+              class="flex items-center gap-2 h-[50px] px-3 border rounded cursor-pointer select-none bg-white hover:bg-blue-50 transition-colors"
+              [ngClass]="{ 'border-blue-500 bg-blue-50': filterForm.get('pedidosWeb')?.value }"
+            >
+              <input
+                type="checkbox"
+                formControlName="pedidosWeb"
+                (change)="applyFilters()"
+                class="w-4 h-4 accent-blue-600"
+              />
+              <span class="text-sm font-medium text-gray-700">Pedidos Web</span>
+            </label>
+          </div>
+
+
           <!-- Botón limpiar -->
           <div class="lg:col-span-2 flex items-end">
             <button

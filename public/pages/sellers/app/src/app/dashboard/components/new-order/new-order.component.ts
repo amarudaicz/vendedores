@@ -12,10 +12,12 @@ import { OrdersService } from '../../../shared/services/orders/orders.service';
 import { Customer } from '../../../interfaces/customer';
 import { ProductsService } from '../../../shared/services/products/products.service';
 import { globalConfig } from '../../../global-config';
+import { ComboTransportesComponent } from '../../../shared/components/combo-transportes/combo-transportes.component';
+import { ComboMetodoEnvioComponent } from '../../../shared/components/combo-metodo-envio/combo-metodo-envio.component';
 
 @Component({
     selector: 'app-new-order',
-    imports: [CommonModule, ReactiveFormsModule, SearchClientComponent, ItemsListComponent, SuccessOrderComponent],
+    imports: [CommonModule, ReactiveFormsModule, SearchClientComponent, ItemsListComponent, SuccessOrderComponent, ComboTransportesComponent, ComboMetodoEnvioComponent],
     providers: [HttpClient],
     templateUrl: './new-order.component.html',
     styleUrl: './new-order.component.scss'
@@ -40,7 +42,9 @@ export class NewOrderComponent {
       paymentMethod: [null, []],
       items: fb.array([]),
       discount:[0],
-      search:[null, []]
+      search:[null, []],
+      idTransporte: [null],
+      deliveryMethod: [null],
     })
 
     this.productService.getDolar();
@@ -106,7 +110,9 @@ export class NewOrderComponent {
   }
 
   setCustomer(customer:any){
-    this.formNewOrder.patchValue({customer:customer});
+    this.formNewOrder.patchValue({
+      customer: customer,
+    });
   }
 
   getCustomer():Customer{

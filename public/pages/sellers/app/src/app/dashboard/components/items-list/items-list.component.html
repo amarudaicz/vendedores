@@ -39,21 +39,19 @@
                 (click)="selectSuggestion(product)"
                 class="text-left cursor-pointer p-3 w-full border-y hover:bg-slate-300"
               >
-                <div class="flex w-full items-center justify-between gap-x-2">
+                <div class="flex w-full items-center justify-between gap-x-1">
                   <div class="">
-                    <p class="">
-                      {{ product.name }}
+                    <p class="text-sm">
+                      {{ product.name }} - Cód:
+                      <strong> {{ product.code }}</strong>
                     </p>
-                    <p class="text-sm text-gray-600">
-                      {{ product.code }}
-                    </p>
-                    <p class="font-medium font-bold">
-                      {{ product.price | currency }}
+                    <p class="text-sm">
+                      Precio: <strong> {{ product.price | currency }} </strong>
                     </p>
                   </div>
                   <div class="">
                     <span
-                      class="text-sm text-nowrap"
+                      class="text-xs text-nowrap"
                       [ngClass]="
                         product.stock > 0 ? 'text-green-600' : 'text-red-500'
                       "
@@ -114,10 +112,21 @@
         <!-- Encabezado -->
         <thead class="bg-gray-100">
           <tr class="text-left text-sm">
-            <th class="p-2 border border-gray-300">Producto</th>
+            <th class="p-2 border border-gray-300">Cód.</th>
+            <th class="p-2 border border-gray-300">Descripción</th>
             <th class="p-2 border border-gray-300">Cant.</th>
-            <th class="p-2 border border-gray-300" *ngIf="globalConfig.cotizacion">Pr.U. USD</th>
-            <th class="p-2 border border-gray-300" *ngIf="globalConfig.cotizacion">Tot. USD</th>
+            <th
+              class="p-2 border border-gray-300"
+              *ngIf="globalConfig.cotizacion"
+            >
+              Pr.U. USD
+            </th>
+            <th
+              class="p-2 border border-gray-300"
+              *ngIf="globalConfig.cotizacion"
+            >
+              Tot. USD
+            </th>
             <th class="p-2 border border-gray-300">Pr.U. $</th>
             <th class="p-2 border border-gray-300">Tot. $</th>
             <th class="p-2 border border-gray-300 text-center">Acciones</th>
@@ -132,6 +141,9 @@
             class="text-sm"
           >
             <td class="p-2 border border-gray-300">
+              <strong> {{ item.get("product")?.value.code }}</strong>
+            </td>
+            <td class="p-2 border border-gray-300">
               {{ item.get("product")?.value.name }}
             </td>
             <td class="p-2 border border-gray-300">
@@ -142,23 +154,46 @@
                 min="1"
               />
             </td>
-            <td class="p-2 border border-gray-300" *ngIf="globalConfig.cotizacion">
-              {{ item.get("product")?.value.price | currency }}
+            <td
+              class="p-2 border border-gray-300"
+              *ngIf="globalConfig.cotizacion"
+            >
+              <div
+                class="line-through text-xs text-gray-500"
+                *ngIf="
+                  getDiscountedPriceUsd(item) !==
+                  item.get('product')?.value?.price
+                "
+              >
+                {{ item.get("product")?.value?.price | currency }}
+              </div>
+              <div>{{ getDiscountedPriceUsd(item) | currency }}</div>
             </td>
-            <td class="p-2 border border-gray-300" *ngIf="globalConfig.cotizacion">
+            <td
+              class="p-2 border border-gray-300"
+              *ngIf="globalConfig.cotizacion"
+            >
               {{
-                item.get("product")?.value.price * item.get("quantity")?.value
+                getDiscountedPriceUsd(item) * item.get("quantity")?.value
                   | currency
               }}
             </td>
             <td class="p-2 border border-gray-300">
-              {{ getPriceArs(item.get("product")?.value) | currency }}
+              <div
+                class="line-through text-xs text-gray-500"
+                *ngIf="
+                  getDiscountedPriceArs(item) !==
+                  getPriceArs(item.get('product')?.value)
+                "
+              >
+                {{ getPriceArs(item.get("product")?.value) | currency }}
+              </div>
+              <div>{{ getDiscountedPriceArs(item) | currency }}</div>
             </td>
             <td class="p-2 border border-gray-300">
               {{
-                getPriceArs(item.get("product")?.value) *
-                  item.get("quantity")?.value |
-                  currency
+                getDiscountedPriceArs(item) * item.get("quantity")?.value
+                  | currency
               }}
             </td>
             <td class="p-2 border border-gray-300 text-center">

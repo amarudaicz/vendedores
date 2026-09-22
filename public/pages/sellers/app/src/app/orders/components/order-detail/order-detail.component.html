@@ -82,6 +82,7 @@
           <span *ngIf="!loading" class="block font-medium">{{
             customer?.name || guest?.name
           }}</span>
+
           <span *ngIf="!loading" class="block font-medium"
             ><span class="text-blue-800">Nro. Doc: </span
             >{{ customer?.dni || guest?.tin }}</span
@@ -94,6 +95,18 @@
               <span class="text-blue-800 ml-2"> Zona: </span>
               <span class="text-gray-700"> {{ customer?.zone }}</span></span
             >
+          </div>
+
+          <div class="font-medium mt-2">
+            <span>
+              <span class="text-blue-800 "> Método de envío: </span>
+              {{ order.deliveryMethod }}
+            </span>
+
+            <span class="block">
+              <span class="text-blue-800"> Transporte: </span>
+              {{ order.transporte.nombre }}
+            </span>
           </div>
         </div>
 
@@ -139,9 +152,8 @@
       <table class="order-table">
         <thead>
           <tr>
-            <th class="p-2 text-left border border-gray-300" colspan="2">
-              Item
-            </th>
+            <th class="p-2 text-left border border-gray-300">Cod. Producto</th>
+            <th class="p-2 text-left border border-gray-300">Descripción</th>
             <th class="p-2 text-left border border-gray-300">Cant.</th>
             <th
               class="p-2 text-left border border-gray-300"
@@ -174,8 +186,13 @@
             </td>
           </tr>
           <tr *ngFor="let item of items" class="nth-child-even:bg-gray-100">
-            <td class="p-2 text-left border border-gray-300" colspan="2">
+            <td class="p-2 text-left border border-gray-300">
               <span class="block text-nowrap">
+                {{ item.productCode }}
+              </span>
+            </td>
+            <td class="p-2 text-left border border-gray-300">
+              <span class="block text-wrap max-w-[300px]">
                 {{ item.description }}
               </span>
             </td>
