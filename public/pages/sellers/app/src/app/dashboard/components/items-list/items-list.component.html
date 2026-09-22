@@ -103,10 +103,6 @@
       </div>
     </form>
 
-    <div class="font-bold my-3 p-2 rounded border w-fit">
-      TOTAL PEDIDO: <span class=""> {{ getTotalPedido() | currency }}</span>
-    </div>
-
     <div class="mt-3 w-full overflow-x-auto" formArrayName="items">
       <table class="min-w-max w-full border-collapse border border-gray-300">
         <!-- Encabezado -->
@@ -210,6 +206,21 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="flex flex-col gap-3 items-end">
+      <div class="font-bold mt-2 p-2 rounded border w-fit">
+        SUBTOTAL: <span class=""> {{ getTotalPedido() | currency }}</span>
+      </div>
+
+      <div class="font-bold p-2 rounded border w-fit" *ngIf="customer?.descuento">
+        DESCUENTO: <span class=""> {{ customer.descuento }}%</span>
+      </div>
+
+      <div class="font-bold p-2 rounded border w-fit" *ngIf="customer?.descuento">
+        TOTAL:
+        <span class=""> {{ getTotalConDescuentoCliente() | currency }}</span>
+      </div>
     </div>
 
     <div

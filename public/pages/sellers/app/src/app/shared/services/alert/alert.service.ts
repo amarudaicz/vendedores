@@ -43,7 +43,7 @@ export class AlertService {
   private mapSummary(type: string): string {
     switch (type) {
       case 'success': return 'Éxito';
-      case 'info':    return 'Información';
+      case 'info':    return 'Atención';
       case 'warning': return 'Atención';
       case 'error':   return 'Error';
       default:        return '';

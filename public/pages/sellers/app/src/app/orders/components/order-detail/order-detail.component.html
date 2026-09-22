@@ -99,13 +99,13 @@
 
           <div class="font-medium mt-2">
             <span>
-              <span class="text-blue-800 "> Método de envío: </span>
+              <span class="text-blue-800" *ngIf="order.deliveryMethod"> Método de envío: </span>
               {{ order.deliveryMethod }}
             </span>
 
-            <span class="block">
+            <span class="block" *ngIf="order?.transporte?.nombre">
               <span class="text-blue-800"> Transporte: </span>
-              {{ order.transporte.nombre }}
+              {{ order?.transporte?.nombre || order?.nombreTransporte }}
             </span>
           </div>
         </div>
@@ -229,40 +229,42 @@
         </tbody>
 
         <tfoot *ngIf="globalConfig.cotizacion">
+          <tr *ngIf="customerDiscountPercent > 0">
+            <td class="text-blue-800 font-bold">SUBTOTAL USD</td>
+            <td><span *ngIf="total">{{ total | currency }}</span></td>
+            <td colspan="5"></td>
+          </tr>
+          <tr *ngIf="customerDiscountPercent > 0">
+            <td class="text-red-600 font-bold">DESCUENTO ({{ customerDiscountPercent }}%)</td>
+            <td class="text-red-600 font-bold">-{{ discountAmountUsd | currency }}</td>
+            <td colspan="5"></td>
+          </tr>
           <tr>
             <td class="text-blue-800 font-bold">TOTAL USD</td>
             <td>
-              <span *ngIf="total">{{ total | currency }}</span>
+              <span *ngIf="total">{{ totalWithDiscountUsd | currency }}</span>
             </td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <ngx-skeleton-loader
-              *ngIf="!total"
-              animation="pulse"
-            ></ngx-skeleton-loader>
+            <td colspan="5"></td>
           </tr>
         </tfoot>
 
         <tfoot>
+          <tr *ngIf="customerDiscountPercent > 0">
+            <td class="text-blue-800 font-bold">SUBTOTAL $</td>
+            <td><span *ngIf="total">{{ subtotalArs | currency }}</span></td>
+            <td colspan="5"></td>
+          </tr>
+          <tr *ngIf="customerDiscountPercent > 0">
+            <td class="text-red-600 font-bold">DESCUENTO ({{ customerDiscountPercent }}%)</td>
+            <td class="text-red-600 font-bold">-{{ discountAmountArs | currency }}</td>
+            <td colspan="5"></td>
+          </tr>
           <tr>
-            <td class="text-blue-800 font-bold">TOTAL $</td>
+            <td class="text-blue-800 font-bold">{{ customerDiscountPercent > 0 ? 'TOTAL CON DESCUENTO $' : 'TOTAL $' }}</td>
             <td>
-              <span *ngIf="total">{{
-                total * (globalConfig.cotizacion ? cotizacion : 1) | currency
-              }}</span>
+              <span *ngIf="total">{{ totalWithDiscountArs | currency }}</span>
             </td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <ngx-skeleton-loader
-              *ngIf="!total"
-              animation="pulse"
-            ></ngx-skeleton-loader>
+            <td colspan="5"></td>
           </tr>
         </tfoot>
       </table>

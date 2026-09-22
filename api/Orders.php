@@ -417,123 +417,130 @@ abstract class Orders
      */
     public static function updateOrderStatus(int $orderId): void
     {
-        SessionFilter::validateApiSession();
-        AccountFilter::filterApiCustomerAccount();
+        try {
+            //code...
 
-        $seller = Session::get('account');
-        $dolar = $seller->getDolar();
+            SessionFilter::validateApiSession();
+            AccountFilter::filterApiCustomerAccount();
 
-        $data = Request::getJson();
+            $seller = Session::get('account');
+            $dolar = $seller->getDolar();
 
-        if (!isset($data->status)) {
-            throw new ApiException('El campo status es requerido', 400);
-        }
+            $data = Request::getJson();
 
-        $order = Order::getOrderById($orderId);
-
-        if (empty($order))
-            throw new ApiException('Orden no encontrada', 404);
-
-        if (!in_array($data->status, [Order::STATUS_PENDING, Order::STATUS_FINALIZED, Order::STATUS_NOT_REALIZED, Order::STATUS_IN_PROGRESS, Order::STATUS_CONFIRMED]))
-            throw new ApiException('El estado de la orden es inválido', 400);
-
-        if (!Order::canChangeStatus($order->getStatus(), $data->status)) {
-            http_response_code(422);
-            throw new ApiException(sprintf(
-                'No se puede cambiar el estado de la orden de "%s" a "%s"',
-                Order::getStatusLabel($order->getStatus()),
-                Order::getStatusLabel($data->status)
-            ), 400);
-        }
-
-        $order->setStatus($data->status);
-        $order->setUpdatedAt(date('Y-m-d H:i:s'));
-
-        Order::updateOrder($order);
-
-        $statusLabel = Order::getStatusLabel($data->status);
-        $toEmail = '';
-        $customerName = '';
-        $customer = null;
-        $guest = null;
-        $pdfPath = null;
-
-
-
-        if (!empty($order->getCustomerCode())) {
-            error_log('customerCODE: ' . $order->getCustomerCode());
-            $customer = Customer::getCustomerByCode($order->getCustomerCode(), $order->getCustomerZone());
-            error_log('customer: ' . json_encode($customer));
-            if (!empty($customer)) {
-                $customerName = $customer->getName() ?? $customerName;
-                $toEmail = $customer->getEmail() ?? '';
+            if (!isset($data->status)) {
+                throw new ApiException('El campo status es requerido', 400);
             }
-        } elseif (!empty($order->getGuestId())) {
-            $guest = Guest::getGuestById($order->getGuestId());
-            if (!empty($guest)) {
-                $customerName = $guest->getName() ?? $customerName;
-                $toEmail = $guest->getEmail() ?? '';
-            }
-        }
 
-        error_log('Email: ' . $customer->getEmail());
-        // Crear archivo TXT solo cuando la orden pase a estado "confirmed"
-        if ($data->status === Order::STATUS_CONFIRMED) {
-            $orderItems = OrderItem::getOrderItems($orderId);
+            $order = Order::getOrderById($orderId);
+
+            if (empty($order))
+                throw new ApiException('Orden no encontrada', 404);
+
+            if (!in_array($data->status, [Order::STATUS_PENDING, Order::STATUS_FINALIZED, Order::STATUS_NOT_REALIZED, Order::STATUS_IN_PROGRESS, Order::STATUS_CONFIRMED]))
+                throw new ApiException('El estado de la orden es inválido', 400);
+
+            if (!Order::canChangeStatus($order->getStatus(), $data->status)) {
+                http_response_code(422);
+                throw new ApiException(sprintf(
+                    'No se puede cambiar el estado de la orden de "%s" a "%s"',
+                    Order::getStatusLabel($order->getStatus()),
+                    Order::getStatusLabel($data->status)
+                ), 400);
+            }
+
+            $order->setStatus($data->status);
+            $order->setUpdatedAt(date('Y-m-d H:i:s'));
+
+            Order::updateOrder($order);
+
+            $statusLabel = Order::getStatusLabel($data->status);
+            $toEmail = '';
+            $customerName = '';
+            $customer = null;
+            $guest = null;
+            $pdfPath = null;
+
+
 
             if (!empty($order->getCustomerCode())) {
+                error_log('customerCODE: ' . $order->getCustomerCode());
+                $customer = Customer::getCustomerByCode($order->getCustomerCode(), $order->getCustomerZone());
+                error_log('customer: ' . json_encode($customer));
                 if (!empty($customer)) {
-                    $filename = sprintf('../writable/files/pedidos/%08d.txt', $order->getId());
-                    $fileContent = sprintf("1;%08d\r\n", $order->getId());
-                    $fileContent .= sprintf("2;%d;%d;%s\r\n", $customer->getZone(), $customer->getCode(), $customer->getName());
-
-                    foreach ($orderItems as $orderItem) {
-                        $fileContent .= sprintf(
-                            "3;%s;%.3f;;0.00;%.3f\r\n",
-                            $orderItem->getProductCode(),
-                            $orderItem->getQuantity(),
-                            $orderItem->getPrice()
-                        );
-                    }
-                    $fileContent .= sprintf("4;%s\r\n", $order->getNote());
-                    $fileContent .= sprintf("5;%s\r\n", $order->getPaymentMethod());
-                    $fileContent .= sprintf("6;%s\r\n", $order->getTransporte()['id']);
-                    $fileContent .= sprintf("7;%s\r\n", $order->getDeliveryMethod());
-                    $fileContent .= sprintf("8;%s\r\n", $dolar);
-
-                    if (file_put_contents($filename, $fileContent) === false)
-                        throw new ApiException('No se pudo guardar el archivo', 500);
+                    $customerName = $customer->getName() ?? $customerName;
+                    $toEmail = $customer->getEmail() ?? '';
+                }
+            } elseif (!empty($order->getGuestId())) {
+                $guest = Guest::getGuestById($order->getGuestId());
+                if (!empty($guest)) {
+                    $customerName = $guest->getName() ?? $customerName;
+                    $toEmail = $guest->getEmail() ?? '';
                 }
             }
 
-            // Generar PDF de la Nota de Pedido para adjuntarlo al mail
-            try {
-                $pdfContent = OrderPdf::generate($order, $orderItems, $customer, $guest);
-                $pdfPath = sprintf('../writable/files/pedidos/%08d.pdf', $order->getId());
-                if (file_put_contents($pdfPath, $pdfContent) === false)
+            error_log('Email: ' . $customer->getEmail());
+            // Crear archivo TXT solo cuando la orden pase a estado "confirmed"
+            if ($data->status === Order::STATUS_CONFIRMED) {
+                $orderItems = OrderItem::getOrderItems($orderId);
+
+                if (!empty($order->getCustomerCode())) {
+                    if (!empty($customer)) {
+                        $filename = sprintf('../writable/files/pedidos/%08d.txt', $order->getId());
+                        $fileContent = sprintf("1;%08d\r\n", $order->getId());
+                        $fileContent .= sprintf("2;%d;%d;%s\r\n", $customer->getZone(), $customer->getCode(), $customer->getName());
+
+                        foreach ($orderItems as $orderItem) {
+                            $fileContent .= sprintf(
+                                "3;%s;%.3f;;0.00;%.3f\r\n",
+                                $orderItem->getProductCode(),
+                                $orderItem->getQuantity(),
+                                $orderItem->getPrice()
+                            );
+                        }
+                        $fileContent .= sprintf("4;%s\r\n", $order->getNote());
+                        $fileContent .= sprintf("5;%s\r\n", $order->getPaymentMethod());
+                        $fileContent .= sprintf("6;%s\r\n", $order->getTransporte()['id']);
+                        $fileContent .= sprintf("7;%s\r\n", $order->getDeliveryMethod());
+                        $fileContent .= sprintf("8;%s\r\n", $dolar);
+
+                        if (file_put_contents($filename, $fileContent) === false)
+                            throw new ApiException('No se pudo guardar el archivo', 500);
+                    }
+                }
+
+                // Generar PDF de la Nota de Pedido para adjuntarlo al mail
+                try {
+                    $pdfContent = OrderPdf::generate($order, $orderItems, $customer, $guest);
+                    $pdfPath = sprintf('../writable/files/pedidos/%08d.pdf', $order->getId());
+                    if (file_put_contents($pdfPath, $pdfContent) === false)
+                        $pdfPath = null;
+                } catch (\Throwable $e) {
+                    error_log('No se pudo generar el PDF del pedido #' . $order->getId() . ': ' . $e->getMessage());
                     $pdfPath = null;
-            } catch (\Throwable $e) {
-                error_log('No se pudo generar el PDF del pedido #' . $order->getId() . ': ' . $e->getMessage());
-                $pdfPath = null;
+                }
             }
-        }
 
-        if (!empty($toEmail)) {
-            try {
-                Notifications::sendOrderStatusUpdate($order, $toEmail, $statusLabel, $customerName, $pdfPath);
-            } catch (\Exception $e) {
-                error_log('No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': ' . $e->getMessage());
+            if (!empty($toEmail)) {
+                try {
+                    Notifications::sendOrderStatusUpdate($order, $toEmail, $statusLabel, $customerName, $pdfPath);
+                } catch (\Exception $e) {
+                    error_log('No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': ' . $e->getMessage());
+                }
+            } else {
+                error_log('No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': el cliente no tiene email registrado');
             }
-        } else {
-            error_log('No se pudo enviar el mail de cambio de estado para el pedido #' . $order->getId() . ': el cliente no tiene email registrado');
-        }
 
-        if (!empty($pdfPath) && file_exists($pdfPath)) {
-            @unlink($pdfPath);
-        }
+            if (!empty($pdfPath) && file_exists($pdfPath)) {
+                @unlink($pdfPath);
+            }
 
-        Response::append('order', $order);
-        Response::setCode(200);
+            Response::append('order', $order);
+            Response::setCode(200);
+        } catch (\Throwable $th) {
+            error_log($th->getMessage());
+            throw new Exception('Ocurrió un error al cambiar el estado', 500);
+        }
     }
 
     /**

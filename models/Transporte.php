@@ -96,4 +96,30 @@ class Transporte implements JsonSerializable {
 
         return $transportes;
     }
+
+    /**
+     * Obtiene un transporte por su ID.
+     *
+     * @param int $id
+     * @return Transporte|null
+     */
+    public static function getById(int $id): ?Transporte {
+        $conn = Connection::getConn();
+
+        $stmt = $conn->prepare("SELECT transporte_id, transporte_nombre FROM transportes WHERE transporte_id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($row = $result->fetch_assoc()) {
+            $transporte = new Transporte();
+            $transporte->setTransporteId((int)$row['transporte_id']);
+            $transporte->setTransporteNombre($row['transporte_nombre'] ?? '');
+            $stmt->close();
+            return $transporte;
+        }
+
+        $stmt->close();
+        return null;
+    }
 }

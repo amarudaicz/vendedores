@@ -30,6 +30,7 @@ import { Router } from '@angular/router';
 import { environment } from '../../../../../environment';
 import { Product } from '../../../interfaces/product.interface';
 import { globalConfig } from '../../../global-config';
+import { Customer } from '../../../interfaces/customer';
 
 @Component({
   selector: 'app-items-list',
@@ -43,7 +44,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
 
   @Input() form!: FormGroup;
 
-  @Input() customer: any;
+  @Input() customer!: Customer;
   @Output() itemsEmitter: EventEmitter<any> = new EventEmitter();
 
   private querySubjects: Subject<string>[] = []; // Almacena Subjects individuales para cada input.
@@ -157,12 +158,13 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
 
   getTotalPedido(): number {
     const items = this.itemsFormArray.value;
-    const generalDiscount = this.form.get('discount')?.value || 0; // Obtiene el descuento general o 0 si no está definido
+    const generalDiscount = this.form.get('discount')?.value || 0;
 
     let total = 0;
     items.forEach((item: any) => {
-      const precioConDescuento =
-        item.product.price * (1 - (item.discount || 0) / 100);
+      if (!item.product) return;
+      const basePrice = this.getPriceArs(item.product);
+      const precioConDescuento = basePrice * (1 - (item.discount || 0) / 100);
       total += precioConDescuento * item.quantity;
     });
 
@@ -170,6 +172,12 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
     total = total * (1 - generalDiscount / 100);
 
     return total;
+  }
+
+  getTotalConDescuentoCliente(): number {
+    const total = this.getTotalPedido();
+    const customerDiscount = Number(this.customer?.descuento || 0);
+    return total * (1 - customerDiscount / 100);
   }
 
   setupObservers() {
@@ -218,7 +226,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
       this.formNewProduct.markAllAsTouched();
       this.alertService.showAlert(
         'Busca un producto antes de agregar',
-        'error',
+        'info',
       );
       return;
     }
@@ -226,7 +234,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
     if(formValue.quantity <= 0){
       this.alertService.showAlert(
         'La cantidad debe ser mayor a 0',
-        'error',
+        'info',
       );
       return;
     } 

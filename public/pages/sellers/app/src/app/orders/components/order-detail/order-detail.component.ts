@@ -104,4 +104,28 @@ export class OrderDetailComponent {
   get idOrden() {
     return this.order?.id?.toString().padStart(8, '0') || '';
   }
+
+  get customerDiscountPercent(): number {
+    return Number(this.customer?.descuento || 0);
+  }
+
+  get subtotalArs(): number {
+    return (this.total || 0) * (this.globalConfig.cotizacion ? this.cotizacion : 1);
+  }
+
+  get discountAmountArs(): number {
+    return this.subtotalArs * (this.customerDiscountPercent / 100);
+  }
+
+  get totalWithDiscountArs(): number {
+    return this.subtotalArs - this.discountAmountArs;
+  }
+
+  get discountAmountUsd(): number {
+    return (this.total || 0) * (this.customerDiscountPercent / 100);
+  }
+
+  get totalWithDiscountUsd(): number {
+    return (this.total || 0) - this.discountAmountUsd;
+  }
 }
