@@ -57,4 +57,5 @@ jobs:
             **/public/pages/sellers/app/*.ts
             **/public/pages/sellers/app/*.md
             **/public/pages/sellers/app/*.sh
+            vendor/**
           dangerous-clean-slate: false
