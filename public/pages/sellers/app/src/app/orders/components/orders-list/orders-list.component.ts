@@ -352,7 +352,13 @@ export class OrdersListComponent implements OnInit, AfterContentInit {
       page === this.paginator.page
     )
       return;
-    this.fetchOrders(this.filterForm.value, page);
+    this.fetchOrders(
+      {
+        ...this.filterForm.value,
+        pedidosWeb: this.filterForm.value.pedidosWeb ? 1 : 0,
+      },
+      page,
+    );
     this.scrollContainer.nativeElement.scrollTop = 0;
   }
 
