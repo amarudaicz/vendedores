@@ -23,7 +23,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Subject, catchError, debounceTime, distinctUntilChanged, filter, of, switchMap } from 'rxjs';
+import {
+  Subject,
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  of,
+  switchMap,
+} from 'rxjs';
 import AlertService from '../../../shared/services/alert/alert.service';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -50,7 +58,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
   private querySubjects: Subject<string>[] = []; // Almacena Subjects individuales para cada input.
   private subscriptions: any[] = []; // Para gestionar las suscripciones.
   globalConfig = globalConfig;
-  suggestions: any[] | undefined = undefined;
+  suggestions: Product[] | undefined = undefined;
   activeInputIndex: number = 0;
   paginator: any = {
     page: 1,
@@ -68,7 +76,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
   ) {
     this.formNewProduct = fb.group({
       query: ['', [Validators.required]], // Código del producto
-      quantity: [1, [Validators.required, Validators.min(1)]], // Cantidad inicial
+      quantity: [null, [Validators.required, Validators.min(1)]], // Cantidad inicial
       product: [null, [Validators.required]], // Producto seleccionado,
       discount: [0],
     });
@@ -224,20 +232,14 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
 
     if (!formValue.product) {
       this.formNewProduct.markAllAsTouched();
-      this.alertService.showAlert(
-        'Busca un producto antes de agregar',
-        'info',
-      );
+      this.alertService.showAlert('Busca un producto antes de agregar', 'info');
       return;
     }
 
-    if(formValue.quantity <= 0){
-      this.alertService.showAlert(
-        'La cantidad debe ser mayor a 0',
-        'info',
-      );
+    if (formValue.quantity <= 0) {
+      this.alertService.showAlert('La cantidad debe ser mayor a 0', 'info');
       return;
-    } 
+    }
 
     // if(formValue.quantity > formValue.product.stock){
     //   this.alertService.showAlert(
@@ -250,7 +252,8 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
     const existingIndex = this.itemsFormArray.controls.findIndex(
       (control) =>
         control.get('product')?.value?.code === formValue.product.code ||
-        (control.get('product')?.value?.id && control.get('product')?.value?.id === formValue.product.id)
+        (control.get('product')?.value?.id &&
+          control.get('product')?.value?.id === formValue.product.id),
     );
 
     if (existingIndex !== -1) {
@@ -269,15 +272,16 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
       );
     }
 
+    this.alertService.showAlert('Producto agregado', 'success');
+
     this.formNewProduct.patchValue(
       {
         query: '',
         product: null,
-        quantity: 1,
+        quantity: null,
       },
       { emitEvent: false },
     );
-    this.suggestions = undefined;
   }
 
   onInputChange(index: number, query: string) {
@@ -304,7 +308,11 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
   }
 
   loadMoreSuggestions() {
-    if (this.paginator.page === this.paginator.totalPages || this.formNewProduct.get('product')?.value) return;
+    if (
+      this.paginator.page === this.paginator.totalPages ||
+      this.formNewProduct.get('product')?.value
+    )
+      return;
 
     const query = this.formNewProduct.get('query')?.value;
 
@@ -340,8 +348,6 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
       { product: suggestion, query: suggestion.name },
       { emitEvent: false },
     );
-
-    this.resetSuggestions();
   }
 
   resetSuggestions() {
@@ -353,7 +359,9 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
   }
 
   getPriceArs(product: Product) {
-    return this.globalConfig.cotizacion ? product.price * product.arsUsd: product.price;
+    return this.globalConfig.cotizacion
+      ? product.price * product.arsUsd
+      : product.price;
   }
 
   getDiscountedPriceArs(item: any) {

@@ -18,26 +18,45 @@
                   : 'border-slate-400'
               "
             />
+
             <div
-              *ngIf="
-                formNewProduct.get('product')?.invalid &&
-                formNewProduct.get('query')?.touched
-              "
-              class="absolute top-1/2 right-3 transform -translate-y-1/2 flex items-center text-red-500"
+              class="absolute top-1/2 right-3 transform -translate-y-1/2 flex items-center"
             >
-              <i class="icon-[icon-park-outline--info] mr-1"></i>
+              <div
+                *ngIf="
+                  formNewProduct.get('product')?.invalid &&
+                  formNewProduct.get('query')?.touched
+                "
+                class="flex items-center text-red-500"
+              >
+                <i class="icon-[icon-park-outline--info] mr-1"></i>
+              </div>
+
+              <div
+                (click)="resetSuggestions()"
+                *ngIf="suggestions?.length"
+                class="flex items-center cursor-pointer mx-2"
+              >
+                <i class="icon-[icon-park-outline--close]"></i>
+              </div>
             </div>
           </div>
 
           <div
             #scrollContainer
             [id]="'scrollContainer' + 0"
-            class="absolute w-full rounded-md top-[101%] bg-white max-h-[350px] overflow-y-auto left-0 z-10"
+            *ngIf="suggestions?.length"
+            class="w-full max-h-[350px] py-3 border my-2 overflow-y-auto z-10"
           >
             @for (product of suggestions; track $index) {
               <button
                 (click)="selectSuggestion(product)"
-                class="text-left cursor-pointer p-3 w-full border-y hover:bg-slate-300"
+                class="text-left cursor-pointer p-3 w-full border-y"
+                [ngClass]="
+                  product.code == formNewProduct.get('product')?.value?.code
+                    ? 'bg-primary text-white'
+                    : 'hover:bg-slate-300'
+                "
               >
                 <div class="flex w-full items-center justify-between gap-x-1">
                   <div class="">
@@ -103,123 +122,173 @@
       </div>
     </form>
 
-    <div class="mt-3 w-full overflow-x-auto" formArrayName="items">
-      <table class="min-w-max w-full border-collapse border border-gray-300">
-        <!-- Encabezado -->
-        <thead class="bg-gray-100">
-          <tr class="text-left text-sm">
-            <th class="p-2 border border-gray-300">Cód.</th>
-            <th class="p-2 border border-gray-300">Descripción</th>
-            <th class="p-2 border border-gray-300">Cant.</th>
-            <th
-              class="p-2 border border-gray-300"
-              *ngIf="globalConfig.cotizacion"
-            >
-              Pr.U. USD
-            </th>
-            <th
-              class="p-2 border border-gray-300"
-              *ngIf="globalConfig.cotizacion"
-            >
-              Tot. USD
-            </th>
-            <th class="p-2 border border-gray-300">Pr.U. $</th>
-            <th class="p-2 border border-gray-300">Tot. $</th>
-            <th class="p-2 border border-gray-300 text-center">Acciones</th>
-          </tr>
-        </thead>
-
-        <!-- Cuerpo -->
-        <tbody>
-          <tr
-            *ngFor="let item of itemsFormArray.controls; let i = index"
-            [formGroupName]="i"
-            class="text-sm"
+    <div class="mt-3 flex flex-col gap-3" formArrayName="items">
+      <article
+        *ngFor="let item of itemsFormArray.controls; let i = index"
+        [formGroupName]="i"
+        class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm"
+      >
+        <!-- Header: código + eliminar -->
+        <div class="flex items-center justify-between gap-2">
+          <span
+            class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700"
           >
-            <td class="p-2 border border-gray-300">
-              <strong> {{ item.get("product")?.value.code }}</strong>
-            </td>
-            <td class="p-2 border border-gray-300">
-              {{ item.get("product")?.value.name }}
-            </td>
-            <td class="p-2 border border-gray-300">
-              <input
-                class="w-16 p-1 border border-gray-400 rounded text-center"
-                formControlName="quantity"
-                type="number"
-                min="1"
-              />
-            </td>
-            <td
-              class="p-2 border border-gray-300"
-              *ngIf="globalConfig.cotizacion"
+            Cód. {{ item.get("product")?.value.code }}
+          </span>
+          <button
+            type="button"
+            aria-label="Eliminar ítem"
+            title="Eliminar"
+            class="rounded-md p-1 text-red-600 transition-colors hover:bg-red-50 active:bg-red-100"
+            (click)="removeItem(i)"
+          >
+            <i class="icon-[icon-park-outline--delete-five] block text-2xl"></i>
+          </button>
+        </div>
+
+        <!-- Descripción -->
+        <p class="mt-1 text-sm font-medium leading-snug text-slate-900">
+          {{ item.get("product")?.value.name }}
+        </p>
+
+        <!-- Precios -->
+        <div
+          class="mt-3 grid grid-cols-3 items-center gap-2 rounded-lg bg-slate-50 p-2 text-sm"
+        >
+          <!-- Cantidad -->
+          <div class="flex flex-col">
+            <label
+              [for]="'qty-' + i"
+              class="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
+              >Cant.</label
             >
-              <div
-                class="line-through text-xs text-gray-500"
+            <input
+              [id]="'qty-' + i"
+              class="w-20 rounded-md border border-slate-300 p-2 text-center text-sm shadow-sm focus:border-primary focus:outline-none"
+              formControlName="quantity"
+              type="number"
+              min="1"
+            />
+          </div>
+
+          <div>
+            <p
+              class="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
+            >
+              Pr.U. $
+            </p>
+            <p
+              class="text-xs text-slate-400 line-through"
+              *ngIf="
+                getDiscountedPriceArs(item) !==
+                getPriceArs(item.get('product')?.value)
+              "
+            >
+              {{ getPriceArs(item.get("product")?.value) | currency }}
+            </p>
+            <p class="font-semibold text-slate-900">
+              {{ getDiscountedPriceArs(item) | currency }}
+            </p>
+          </div>
+          <div class="text-right">
+            <p
+              class="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
+            >
+              Sub. $
+            </p>
+            <p class="font-bold text-slate-900">
+              {{
+                getDiscountedPriceArs(item) * item.get("quantity")?.value
+                  | currency
+              }}
+            </p>
+          </div>
+          <ng-container *ngIf="globalConfig.cotizacion">
+            <div class="border-t border-slate-200 pt-2">
+              <p
+                class="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
+              >
+                Pr.U. USD
+              </p>
+              <p
+                class="text-xs text-slate-400 line-through"
                 *ngIf="
                   getDiscountedPriceUsd(item) !==
                   item.get('product')?.value?.price
                 "
               >
                 {{ item.get("product")?.value?.price | currency }}
-              </div>
-              <div>{{ getDiscountedPriceUsd(item) | currency }}</div>
-            </td>
-            <td
-              class="p-2 border border-gray-300"
-              *ngIf="globalConfig.cotizacion"
-            >
-              {{
-                getDiscountedPriceUsd(item) * item.get("quantity")?.value
-                  | currency
-              }}
-            </td>
-            <td class="p-2 border border-gray-300">
-              <div
-                class="line-through text-xs text-gray-500"
-                *ngIf="
-                  getDiscountedPriceArs(item) !==
-                  getPriceArs(item.get('product')?.value)
-                "
+              </p>
+              <p class="font-semibold text-slate-900">
+                {{ getDiscountedPriceUsd(item) | currency }}
+              </p>
+            </div>
+            <div class="border-t border-slate-200 pt-2 text-right">
+              <p
+                class="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
               >
-                {{ getPriceArs(item.get("product")?.value) | currency }}
-              </div>
-              <div>{{ getDiscountedPriceArs(item) | currency }}</div>
-            </td>
-            <td class="p-2 border border-gray-300">
-              {{
-                getDiscountedPriceArs(item) * item.get("quantity")?.value
-                  | currency
-              }}
-            </td>
-            <td class="p-2 border border-gray-300 text-center">
-              <button
-                type="button"
-                class="px-2 py-1 rounded"
-                (click)="removeItem(i)"
-              >
-                <i
-                  class="icon-[icon-park-outline--delete-five] text-2xl text-red-600"
-                ></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                Tot. USD
+              </p>
+              <p class="font-bold text-slate-900">
+                {{
+                  getDiscountedPriceUsd(item) * item.get("quantity")?.value
+                    | currency
+                }}
+              </p>
+            </div>
+          </ng-container>
+        </div>
+      </article>
     </div>
 
-    <div class="flex flex-col gap-3 items-end">
-      <div class="font-bold mt-2 p-2 rounded border w-fit">
-        SUBTOTAL: <span class=""> {{ getTotalPedido() | currency }}</span>
+    <div
+      class="mt-4 w-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+    >
+      <p
+        class="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
+      >
+        Resumen ({{ itemsFormArray.length }} ítems)
+      </p>
+
+      <div class="mt-2 flex items-center justify-between gap-2 text-sm">
+        <span
+          class="font-semibold uppercase tracking-wide text-slate-500 text-xs"
+          >Subtotal</span
+        >
+        <span class="font-semibold text-slate-900">{{
+          getTotalPedido() | currency
+        }}</span>
       </div>
 
-      <div class="font-bold p-2 rounded border w-fit" *ngIf="customer?.descuento">
-        DESCUENTO: <span class=""> {{ customer.descuento }}%</span>
+      <div
+        class="mt-1 flex items-center justify-between gap-2 text-sm"
+        *ngIf="customer?.descuento"
+      >
+        <span
+          class="font-semibold uppercase tracking-wide text-slate-500 text-xs"
+          >Descuento cliente</span
+        >
+        <span
+          class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700"
+        >
+          -{{ customer.descuento }}%
+        </span>
       </div>
 
-      <div class="font-bold p-2 rounded border w-fit" *ngIf="customer?.descuento">
-        TOTAL:
-        <span class=""> {{ getTotalConDescuentoCliente() | currency }}</span>
+      <div
+        class="mt-2 flex items-center justify-between gap-2 border-t border-slate-200 pt-3"
+      >
+        <span class="text-xs font-bold uppercase tracking-wide text-slate-700"
+          >Total</span
+        >
+        <span class="text-lg font-bold text-slate-900">
+          {{
+            (customer?.descuento
+              ? getTotalConDescuentoCliente()
+              : getTotalPedido()
+            ) | currency
+          }}
+        </span>
       </div>
     </div>
 
