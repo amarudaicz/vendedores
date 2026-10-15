@@ -63,7 +63,10 @@
                     <p class="text-sm">
                       {{ product.name }} -
                       <span *ngIf="product && product.cantidadPorCaja">
-                        Pack <strong>x {{ product.cantidadPorCaja }} </strong> -
+                        {{product.cantidadPorCaja > 1 ? 'Pack' : ''}}
+                        <span class="text-primary">
+                          <strong>x{{ product.cantidadPorCaja }} </strong> -
+                        </span>
                       </span>
                       Cód:
                       <strong> {{ product.code }}</strong> -

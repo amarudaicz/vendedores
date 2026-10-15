@@ -16,7 +16,7 @@
               (customerEmitter)="setCustomer($event)"
             ></app-search-client>
             <div
-              class="flex flex-wrap gap-x-5 p-2  border mt-2 rounded shadow-lg"
+              class="flex flex-wrap gap-x-5 p-2 border mt-2 rounded shadow-lg"
               *ngIf="getCustomer()"
             >
               <p class="font-bold flex-1 text-nowrap">
@@ -28,8 +28,9 @@
               <p class="font-bold flex-1 text-nowrap">
                 <span class="font-normal">Zona:</span> {{ getCustomer().zone }}
               </p>
-               <p class="font-bold flex-1 text-nowrap">
-                <span class="font-normal">Descuento:</span> {{ getCustomer().descuento }}%
+              <p class="font-bold flex-1 text-nowrap">
+                <span class="font-normal">Descuento:</span>
+                {{ getCustomer().descuento }}%
               </p>
             </div>
           </div>
@@ -76,8 +77,18 @@
                 {{ dolar || "Cargando.." }}
               </div>
             </div>
-          </div>
 
+            <app-items-list
+              [form]="formNewOrder"
+              [customer]="getCustomer()"
+              class="flex-1"
+              (itemsEmitter)="setItems($event)"
+            ></app-items-list>
+          </div>
+        </div>
+
+        <div class="w-full my-2 h-[1px] bg-black md:hidden"></div>
+        <div class="flex-1">
           <div>
             <label for="orderDescription" class="block font-medium"
               >Observaciones</label
@@ -164,16 +175,7 @@
               ></app-combo-metodo-envio>
             </div>
           </div>
-
         </div>
-
-        <div class="w-full my-2 h-[1px] bg-black md:hidden"></div>
-        <app-items-list
-          [form]="formNewOrder"
-          [customer]="getCustomer()"
-          class="flex-1"
-          (itemsEmitter)="setItems($event)"
-        ></app-items-list>
       </div>
 
       <!-- Botón de Envío -->
