@@ -113,6 +113,8 @@ class Product implements JsonSerializable
      */
     private ?Subcategory $subcategory;
 
+    private int $cantidadPorCaja;
+
     /**
      *
      */
@@ -135,11 +137,12 @@ class Product implements JsonSerializable
         $this->updatedAt = '';
         $this->categoryCode = 0;
         $this->subcategoryCode = null;
+        $this->cantidadPorCaja = 0;
 
         $this->image = null;
         $this->category = null;
         $this->subcategory = null;
-}
+    }
 
     /**
      * @return string
@@ -273,7 +276,7 @@ class Product implements JsonSerializable
             }
         } catch (ApiException $e) {
             // Si falla al obtener la cotización, no rompemos la carga de productos
-                // El valor arsUsd vendrá de la base de datos (articulos.articulo_ars_usd)
+            // El valor arsUsd vendrá de la base de datos (articulos.articulo_ars_usd)
             error_log('Error al actualizar ars_usd desde cotizacion: ' . $e->getMessage());
         }
     }
@@ -558,6 +561,24 @@ class Product implements JsonSerializable
     public function setSubcategory(?Subcategory $subcategory): Product
     {
         $this->subcategory = $subcategory;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCantidadPorCaja(): int
+    {
+        return $this->cantidadPorCaja;
+    }
+
+    /**
+     * @param int $cantidadPorCaja
+     * @return $this
+     */
+    public function setCantidadPorCaja(int $cantidadPorCaja): self
+    {
+        $this->cantidadPorCaja = $cantidadPorCaja;
         return $this;
     }
 
@@ -1133,7 +1154,7 @@ WHERE p.articulo_code = ?";
                 $product->setArsUsd($dolar);
             } catch (ApiException $e) {
                 // Si falla al obtener la cotización, no rompemos la carga del producto
-            // El valor arsUsd vendrá de la base de datos (articulos.articulo_ars_usd)
+                // El valor arsUsd vendrá de la base de datos (articulos.articulo_ars_usd)
                 error_log('Error al actualizar ars_usd desde cotizacion: ' . $e->getMessage());
             }
         }
@@ -1311,14 +1332,16 @@ WHERE articulo_code = ?";
 
     public static function searchByQueryAndCustomerPrice($querySearch, $customerPrice, $page = 1, $perPage = 10, ?float $dolar = null): array
     {
-        $conn = Connection::getConn();
+        try {
 
-        if ($customerPrice < 1 || $customerPrice > 6) {
-            throw new ApiException('Invalid customer price', 400);
-        }
+            $conn = Connection::getConn();
 
-        // Preparar la consulta
-$query = "SELECT p.articulo_code AS code,
+            if ($customerPrice < 1 || $customerPrice > 6) {
+                throw new ApiException('Invalid customer price', 400);
+            }
+
+            // Preparar la consulta
+            $query = "SELECT p.articulo_code AS code,
                       p.articulo_name AS name,
                       p.articulo_description AS description,
                       p.articulo_price_$customerPrice AS price,
@@ -1329,6 +1352,7 @@ $query = "SELECT p.articulo_code AS code,
                      p.articulo_updated_at AS updated_at,
                      p.articulo_genero_code AS category_code,
                      p.articulo_familia_code AS subcategory_code,
+                     p.articulo_cantidad_por_caja AS cantidadPorCaja,
                      g.genero_name AS category_name,
                      f.familia_name AS subcategory_name,
                      img.image_id AS image_id
@@ -1341,77 +1365,82 @@ $query = "SELECT p.articulo_code AS code,
                ORDER BY p.articulo_name";
 
 
-        // Preparar la consulta
-        $stmt = $conn->prepare($query);
-        $offset = ($page - 1) * $perPage;
-        // Vincular los parámetros
-        $searchTerm = '%' . $querySearch . '%';
-        $stmt->bind_param('ss', $searchTerm, $searchTerm);
+            // Preparar la consulta
+            $stmt = $conn->prepare($query);
+            $offset = ($page - 1) * $perPage;
+            // Vincular los parámetros
+            $searchTerm = '%' . $querySearch . '%';
+            $stmt->bind_param('ss', $searchTerm, $searchTerm);
 
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $products = $result->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $products = $result->fetch_all(MYSQLI_ASSOC);
 
-        // Obtener el total de productos para la paginación
-        $countQuery = "SELECT COUNT(*) as total 
+            // Obtener el total de productos para la paginación
+            $countQuery = "SELECT COUNT(*) as total 
                     FROM articulos p 
                     WHERE p.articulo_deleted = 0
                     AND (p.articulo_name LIKE ? OR p.articulo_code LIKE ?)";
 
-        $countStmt = $conn->prepare($countQuery);
-        $countStmt->bind_param('ss', $searchTerm, $searchTerm);
-        $countStmt->execute();
-        $countResult = $countStmt->get_result();
-        $total = $countResult->fetch_assoc()['total'];
+            $countStmt = $conn->prepare($countQuery);
+            $countStmt->bind_param('ss', $searchTerm, $searchTerm);
+            $countStmt->execute();
+            $countResult = $countStmt->get_result();
+            $total = $countResult->fetch_assoc()['total'];
 
-        $countResult->free();
-        $result->free();
+            $countResult->free();
+            $result->free();
 
-        // Convertir array asociativo a objetos Product y actualizar ars_usd desde cotizacion
-        $productObjects = [];
-        foreach ($products as $row) {
-            $product = new Product();
-            $product->setCode($row['code']);
-            $product->setName($row['name']);
-            $product->setDescription($row['description']);
-            $precioSinIva = round($row['price'], 2);
-            $product->setPrice($precioSinIva);
-            $product->setStock($row['stock']);
-            $product->setFeatured($row['featured']);
-            $product->setDeleted($row['deleted']);
-            $product->setUpdatedAt($row['updated_at']);
-            $product->setCategoryCode($row['category_code']);
-            $product->setSubcategoryCode($row['subcategory_code']);
+            // Convertir array asociativo a objetos Product y actualizar ars_usd desde cotizacion
+            $productObjects = [];
+            foreach ($products as $row) {
+                $product = new Product();
+                $product->setCode($row['code']);
+                $product->setName($row['name']);
+                $product->setDescription($row['description']);
+                $precioSinIva = round($row['price'], 2);
+                $product->setPrice($precioSinIva);
+                $product->setStock($row['stock']);
+                $product->setFeatured($row['featured']);
+                $product->setDeleted($row['deleted']);
+                $product->setUpdatedAt($row['updated_at']);
+                $product->setCategoryCode($row['category_code']);
+                $product->setSubcategoryCode($row['subcategory_code']);
+                $product->setCantidadPorCaja($row['cantidadPorCaja']);
 
-            if (!empty($row['image_id'])) {
-                $product->setImage(new Image());
-                $product->getImage()->setId($row['image_id']);
-                $product->getImage()->setFilePath('placeholder-image');
+                if (!empty($row['image_id'])) {
+                    $product->setImage(new Image());
+                    $product->getImage()->setId($row['image_id']);
+                    $product->getImage()->setFilePath('placeholder-image');
+                }
+
+                $product->setCategory(new Category());
+                $product->getCategory()->setCode($row['category_code'] ?? '');
+                $product->getCategory()->setName($row['category_name'] ?? '');
+
+                if (!empty($row['subcategory_code'])) {
+                    $product->setSubcategory(new Subcategory());
+                    $product->getSubcategory()->setCode($row['subcategory_code'] ?? '');
+                    $product->getSubcategory()->setName($row['subcategory_name'] ?? '');
+                }
+
+                $productObjects[] = $product;
             }
 
-            $product->setCategory(new Category());
-            $product->getCategory()->setCode($row['category_code']);
-            $product->getCategory()->setName($row['category_name']);
+            // Actualizar ars_usd con el valor actual de cotizacion
+            self::updateArsUsdFromCotizacion($productObjects, $dolar);
 
-            if (!empty($row['subcategory_code'])) {
-                $product->setSubcategory(new Subcategory());
-                $product->getSubcategory()->setCode($row['subcategory_code']);
-                $product->getSubcategory()->setName($row['subcategory_name']);
-            }
-
-            $productObjects[] = $product;
+            return [
+                'products' => $productObjects,
+                'page' => $page,
+                'perPage' => $perPage,
+                'totalPages' => ceil($total / $perPage),
+                'total' => $total
+            ];
+        } catch (\Throwable $th) {
+            throw new ApiException('Error al obtener los productos', 500);
         }
 
-        // Actualizar ars_usd con el valor actual de cotizacion
-        self::updateArsUsdFromCotizacion($productObjects, $dolar);
-
-        return [
-            'products' => $productObjects,
-            'page' => $page,
-            'perPage' => $perPage,
-            'totalPages' => ceil($total / $perPage),
-            'total' => $total
-        ];
     }
 
     /**

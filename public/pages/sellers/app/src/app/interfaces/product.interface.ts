@@ -7,7 +7,7 @@ export interface Product {
   arsUsd:number;
   stock: number;
   unit: string | null;         
-  cant_x_caja: number | null;    
+  cantidadPorCaja: number | null;    
   created_at: string;
   updated_at: string;
 }

@@ -65,6 +65,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
   };
 
   isSetup: boolean = false;
+  isItemsOpen: boolean = true;
   @ViewChildren('scrollAnchor') scrollAnchors!: QueryList<ElementRef>;
   @ViewChildren('scrollContainer') scrollContainers!: QueryList<ElementRef>;
 
@@ -345,7 +346,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
     // }
 
     this.formNewProduct.patchValue(
-      { product: suggestion, query: suggestion.name },
+      { product: suggestion},
       { emitEvent: false },
     );
   }
