@@ -38,11 +38,31 @@ abstract class AuthSellers
 
     public static function signOut(): void
     {
-        if (empty($_SESSION['account']))
+        if (empty($_SESSION['account'])) {
             throw new ApiException('Forbidden. You are not logged in.', 403);
+        }
 
         $_SESSION = [];
+
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+
+            setcookie(
+                session_name(),
+                '',
+                [
+                    'expires' => time() - 42000,
+                    'path' => $params['path'],
+                    'domain' => $params['domain'],
+                    'secure' => $params['secure'],
+                    'httponly' => $params['httponly'],
+                    'samesite' => $params['samesite'] ?? 'Lax',
+                ]
+            );
+        }
+
         session_destroy();
+
         Response::setCode(204);
     }
 
@@ -77,10 +97,13 @@ abstract class AuthSellers
             http_response_code(400);
             throw new ApiException('Credenciales inválidas', 401);
         }
-
+        
+        $_SESSION = [];
+        session_regenerate_id(true);
 
         $_SESSION['timestamp'] = time();
         $_SESSION['account'] = serialize($account);
+        session_write_close();
 
         Response::setCode(204);
     }
@@ -130,8 +153,12 @@ abstract class AuthSellers
 
         Connection::getConn()->commit();
 
+        $_SESSION = [];
+        session_regenerate_id(true);
+
         $_SESSION['timestamp'] = time();
         $_SESSION['account'] = serialize($account);
+        session_write_close();
 
         Response::setCode(204);
     }
@@ -155,7 +182,7 @@ abstract class AuthSellers
         $data = Request::getJson();
 
         // Determine target seller ID
-        $targetSellerId = isset($data->sellerId) ? (int)$data->sellerId : $account->getId();
+        $targetSellerId = isset($data->sellerId) ? (int) $data->sellerId : $account->getId();
         $isSelfUpdate = $targetSellerId === $account->getId();
 
         if (!$isSelfUpdate) {
@@ -171,7 +198,11 @@ abstract class AuthSellers
             throw new ApiException('La nueva contraseña es requerida.', 400);
         }
 
-        $newPasswordHash = password_hash($data->newPassword, PASSWORD_DEFAULT);
+        $newPasswordHash = password_hash(
+            $account->getPasswordSalt() . $data->newPassword,
+            PASSWORD_DEFAULT
+        );
+
         $result = Seller::updatePassword($targetSellerId, $newPasswordHash);
 
         if (!$result) {

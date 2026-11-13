@@ -1,13 +1,16 @@
 <?php
+
 namespace helpers;
+
+use config\SessionConfiguration;
 use helpers\Logger;
 
-
-abstract class Session{
-
+abstract class Session
+{
     private static function startSession(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            SessionConfiguration::setOptions();
             session_start();
         }
     }

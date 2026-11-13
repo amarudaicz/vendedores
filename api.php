@@ -1,5 +1,6 @@
 <?php
 
+use config\SessionConfiguration;
 use helpers\Router;
 use helpers\Response;
 use config\ErrorConfiguration;
@@ -10,9 +11,13 @@ define('BASE_PATH', __DIR__);
 include_once("vendor/autoload.php");
 
 ErrorConfiguration::setOptions();
+SessionConfiguration::setOptions();
 
 try {
-    session_start();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
     $router = new Router();
     include_once("routes/api.php");
     $router->run();

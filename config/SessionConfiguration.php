@@ -49,7 +49,7 @@ abstract class SessionConfiguration {
     /**
      * Indicates whether strict mode should be used for session operations (1 for true, 0 for false).
      */
-    public const SESSION_USE_STRICT_MODE = '0';
+    public const SESSION_USE_STRICT_MODE = '1';
 
     /**
      * The session ID length in characters.
@@ -60,15 +60,24 @@ abstract class SessionConfiguration {
      * Set the session configuration options.
      */
     public static function setOptions(): void {
+        $host = explode(':', $_SERVER['HTTP_HOST'] ?? '')[0];
+        $domain = SiteConfiguration::DOMAIN;
+        $isProductionDomain = !empty($host) && ($host === $domain || str_ends_with($host, '.' . $domain));
+        $cookieDomain = $isProductionDomain ? self::SESSION_COOKIE_DOMAIN : '';
+
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        $cookieSecure = $isHttps ? '1' : '0';
+
         ini_set('session.name', self::SESSION_NAME);
-        ini_set('session.cookie_domain', self::SESSION_COOKIE_DOMAIN);
-        ini_set('session.cookie_secure', self::SESSION_COOKIE_SECURE);
+        ini_set('session.cookie_domain', $cookieDomain);
+        ini_set('session.cookie_secure', $cookieSecure);
         ini_set('session.cookie_lifetime', self::SESSION_COOKIE_LIFETIME);
         ini_set('session.gc_maxlifetime', self::SESSION_GC_MAXLIFETIME);
         ini_set('session.cookie_httponly', self::SESSION_COOKIE_HTTPONLY);
         ini_set('session.cookie_path', self::SESSION_COOKIE_PATH);
         ini_set('session.cookie_samesite', self::SESSION_COOKIE_SAMESITE);
         ini_set('session.use_strict_mode', self::SESSION_USE_STRICT_MODE);
-        ini_set('session.sid_length', self::SESSION_SID_LENGTH);
     }
 }
