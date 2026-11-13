@@ -12,7 +12,14 @@ export class ProductService {
 
   constructor(private http: HttpClient) { }
 
-  getProducts(page: number = 1): Observable<ApiRes<{ products: Product[], totalPages: number, total: number }>> {
-    return this.http.get<ApiRes<{ products: Product[], totalPages: number, total: number }>>(`${environment.apiUrl}products?page=${page}`, { withCredentials: true });
+  searchProducts(query: string, customerPrice: number = 1): Observable<ApiRes<{ products: Product[] }>> {
+    const params = new URLSearchParams({
+      query,
+      customer_price: customerPrice.toString(),
+    });
+    return this.http.get<ApiRes<{ products: Product[] }>>(
+      `${environment.apiUrl}sellers/products?${params.toString()}`,
+      { withCredentials: true }
+    );
   }
 }

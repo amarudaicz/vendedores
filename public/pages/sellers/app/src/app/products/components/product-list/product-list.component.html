@@ -6,7 +6,7 @@
       <h1 class="text-2xl font-bold mb-1">Productos Disponibles</h1>
 
       <p class="text-gray-700 mb-4">
-        Lista de todos los productos activos en el sistema.
+        Buscá por nombre o código para encontrar productos.
       </p>
 
       <div class="">
@@ -14,7 +14,11 @@
           <span
             class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500"
           >
-            <span class="icon-[material-symbols--search] text-xl"></span>
+            @if (isLoading()) {
+              <span class="icon-[eos-icons--loading] text-xl text-primary"></span>
+            } @else {
+              <span class="icon-[material-symbols--search] text-xl"></span>
+            }
           </span>
           <input
             type="text"
@@ -30,10 +34,10 @@
       #scrollContainer
       class="overflow-x-scroll overflow-y-auto flex-1 border-b"
     >
-      @if (initialLoading()) {
+      @if (isLoading()) {
         <div class="p-4">
           <ngx-skeleton-loader
-            count="15"
+            count="10"
             animation="pulse"
             [theme]="{ height: '40px', 'margin-bottom': '10px' }"
           ></ngx-skeleton-loader>
@@ -49,7 +53,7 @@
         </div>
       }
 
-      @if (displayedProducts().length > 0) {
+      @if (!isLoading() && !error() && displayedProducts().length > 0) {
         <table class="w-full border">
           <thead class="bg-gray-50 sticky top-0 left-0 z-10">
             <tr class="text-left">
@@ -84,7 +88,6 @@
                     </span>
                   </div>
                 </td>
-
                 <td
                   class="px-6 py-4 text-sm text-gray-900 text-center font-semibold"
                 >
@@ -94,30 +97,24 @@
             }
           </tbody>
         </table>
+      }
 
-        @if (isLoadingMore()) {
-          <div class="p-4 flex justify-center bg-gray-50">
-            <div class="flex items-center gap-2">
-              <span
-                class="icon-[eos-icons--loading] text-2xl text-primary"
-              ></span>
-              <span class="text-gray-600 text-sm"
-                >Cargando más productos...</span
-              >
-            </div>
-          </div>
-        }
-      } @else {
-        @if (!initialLoading() && !error()) {
-          <div
-            class="w-full h-full flex flex-col justify-center items-center text-red-500 py-20"
-          >
-            <span
-              class="icon-[material-symbols--search-off-rounded] text-5xl"
-            ></span>
-            <p class="text-lg mt-2">No se encontraron resultados</p>
-          </div>
-        }
+      @if (!isLoading() && !error() && hasSearched() && displayedProducts().length === 0) {
+        <div
+          class="w-full h-full flex flex-col justify-center items-center text-gray-400 py-20"
+        >
+          <span class="icon-[material-symbols--search-off-rounded] text-5xl"></span>
+          <p class="text-lg mt-2">No se encontraron resultados</p>
+        </div>
+      }
+
+      @if (!isLoading() && !error() && !hasSearched()) {
+        <div
+          class="w-full h-full flex flex-col justify-center items-center text-gray-400 py-20"
+        >
+          <span class="icon-[material-symbols--search] text-5xl"></span>
+          <p class="text-lg mt-2">Escribí algo para buscar productos</p>
+        </div>
       }
     </div>
   </div>
