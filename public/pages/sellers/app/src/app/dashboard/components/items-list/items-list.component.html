@@ -1,15 +1,17 @@
 <form [formGroup]="form">
   <section class="flex-1 relative">
-    <form action="" [formGroup]="formNewProduct">
+    <form [formGroup]="formNewProduct" (ngSubmit)="onFormSubmit($event)">
       <div class="flex flex-wrap items-center gap-4">
         <div class="relative w-full">
           <label for="query" class="block font-medium">Producto</label>
           <div class="relative">
             <input
+              #queryInput
               type="text"
               required
               placeholder="Buscar producto"
               formControlName="query"
+              (keydown)="onQueryKeydown($event)"
               class="p-3 border mt-1 block w-full rounded-md shadow-sm"
               [ngClass]="
                 formNewProduct.get('product')?.invalid &&
@@ -50,7 +52,9 @@
           >
             @for (product of suggestions; track $index) {
               <button
+                type="button"
                 (click)="selectSuggestion(product)"
+                (keydown.enter)="onSuggestionKeydown($event, product)"
                 class="text-left cursor-pointer p-3 w-full border-y"
                 [ngClass]="
                   product.code == formNewProduct.get('product')?.value?.code
@@ -64,7 +68,13 @@
                       {{ product.name }} -
                       <span *ngIf="product && product.cantidadPorCaja">
                         {{product.cantidadPorCaja > 1 ? 'Pack' : ''}}
-                        <span class="text-primary">
+                        <span
+                          [ngClass]="
+                            product.code == formNewProduct.get('product')?.value?.code
+                              ? 'text-white'
+                              : 'text-primary'
+                          "
+                        >
                           <strong>x{{ product.cantidadPorCaja }} </strong> -
                         </span>
                       </span>
@@ -80,7 +90,11 @@
                     <span
                       class="text-xs text-nowrap"
                       [ngClass]="
-                        product.stock > 0 ? 'text-green-600' : 'text-red-500'
+                        product.code == formNewProduct.get('product')?.value?.code
+                          ? 'text-white font-semibold'
+                          : product.stock > 0
+                            ? 'text-green-600'
+                            : 'text-red-500'
                       "
                     >
                       {{
@@ -108,7 +122,7 @@
         <div class="flex-1">
           <label for="quantity" class="block font-medium">Cantidad</label>
           <input
-            (keydown.enter)="preventEnter($event)"
+            (keydown.enter)="onQuantityEnter($event)"
             type="number"
             required
             formControlName="quantity"

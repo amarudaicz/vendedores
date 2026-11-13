@@ -30,12 +30,18 @@ abstract class Sellers
     {
         SessionFilter::validateSellerSession();
 
-        $query = $_GET['query'] ?? '';
+        $query = trim($_GET['query'] ?? '');
         $customerPrice = $_GET['customer_price'] ?? '';
-        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
-        $perPage = isset($_GET['perPage']) ?  (int) $_GET['perPage'] : 10;
+        $page = (int) ($_GET['page'] ?? 1);
+        if ($page <= 0) {
+            $page = 1;
+        }
+        $perPage = (int) ($_GET['perPage'] ?? $_GET['per_page'] ?? 10);
+        if ($perPage <= 0) {
+            $perPage = 10;
+        }
 
-      // Si el query está vacío o es '*', buscar todos los productos
+        // Si el query está vacío o es '*', buscar todos los productos
         if (empty($query) || $query === '*') {
             $query = '';
         }

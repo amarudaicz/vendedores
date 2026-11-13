@@ -70,7 +70,7 @@ class Product implements JsonSerializable
     /**
      * @var float
      */
-    private float|string $arsUsd;
+    private float|string|null $arsUsd;
 
     /**
      * @var bool
@@ -96,7 +96,7 @@ class Product implements JsonSerializable
     /**
      * @var int|null
      */
-    private ?int $subcategoryCode;
+    private int|string|null $subcategoryCode;
 
     /**
      * @var Image|null
@@ -113,7 +113,7 @@ class Product implements JsonSerializable
      */
     private ?Subcategory $subcategory;
 
-    private int $cantidadPorCaja;
+    private ?int $cantidadPorCaja;
 
     /**
      *
@@ -471,7 +471,7 @@ class Product implements JsonSerializable
      *
      * @return void
      */
-    public function setArsUsd(float|string $arsUsd): void
+    public function setArsUsd(float|string|null $arsUsd): void
     {
         $this->arsUsd = $arsUsd;
     }
@@ -525,7 +525,7 @@ class Product implements JsonSerializable
      *
      * @return $this
      */
-    public function setSubcategoryCode(?int $subcategoryCode): Product
+    public function setSubcategoryCode(int|string|null $subcategoryCode): Product
     {
         $this->subcategoryCode = $subcategoryCode;
         return $this;
@@ -573,10 +573,10 @@ class Product implements JsonSerializable
     }
 
     /**
-     * @param int $cantidadPorCaja
+     * @param ?int $cantidadPorCaja
      * @return $this
      */
-    public function setCantidadPorCaja(int $cantidadPorCaja): self
+    public function setCantidadPorCaja(?int $cantidadPorCaja): self
     {
         $this->cantidadPorCaja = $cantidadPorCaja;
         return $this;
@@ -1333,63 +1333,168 @@ WHERE articulo_code = ?";
     public static function searchByQueryAndCustomerPrice($querySearch, $customerPrice, $page = 1, $perPage = 10, ?float $dolar = null): array
     {
         try {
-
             $conn = Connection::getConn();
 
+            $customerPrice = (int) $customerPrice;
             if ($customerPrice < 1 || $customerPrice > 6) {
                 throw new ApiException('Invalid customer price', 400);
             }
 
-            // Preparar la consulta
+            $page = (int) $page;
+            if ($page <= 0) {
+                $page = 1;
+            }
+
+            $perPage = (int) $perPage;
+            if ($perPage <= 0) {
+                $perPage = 10;
+            }
+
+            $offset = ($page - 1) * $perPage;
+
+            $trimmedQuery = trim((string)($querySearch ?? ''));
+
+            $tokens = [];
+            if ($trimmedQuery !== '' && $trimmedQuery !== '*') {
+                $rawTokens = preg_split('/\s+/', $trimmedQuery, -1, PREG_SPLIT_NO_EMPTY);
+                if ($rawTokens !== false) {
+                    $tokens = array_values($rawTokens);
+                }
+            }
+
+            $whereParams = [];
+            $whereTypes = '';
+
+            if (empty($tokens) || $trimmedQuery === '*') {
+                // Caso sin tokens o $querySearch === '*'
+                $whereSql = "p.articulo_deleted = 0";
+                $orderSql = "ORDER BY p.articulo_name ASC";
+                $orderParams = [];
+                $orderTypes = '';
+            } else {
+                // Caso con tokens
+                $tokenClauses = [];
+                foreach ($tokens as $token) {
+                    $tokenClauses[] = "p.articulo_name LIKE ? OR p.articulo_description LIKE ?";
+                    $tokenSearch = '%' . $token . '%';
+                    $whereParams[] = $tokenSearch;
+                    $whereParams[] = $tokenSearch;
+                    $whereTypes .= 'ss';
+                }
+
+                $fullPhrase = implode(' ', $tokens);
+                $codeSearch = '%' . $fullPhrase . '%';
+                $whereSql = "p.articulo_deleted = 0 AND (((" . implode(') AND (', $tokenClauses) . ")) OR p.articulo_code LIKE ?)";
+                $whereParams[] = $codeSearch;
+                $whereTypes .= 's';
+
+                // ORDER BY dinámico ponderado
+                $orderClauses = [];
+                $orderParams = [];
+                $orderTypes = '';
+
+                // 1. Coincidencia exacta de código
+                $orderClauses[] = "(CASE WHEN p.articulo_code = ? THEN 0 ELSE 1 END) ASC";
+                $orderParams[] = $fullPhrase;
+                $orderTypes .= 's';
+
+                // 2. Frase completa al inicio
+                $orderClauses[] = "(CASE WHEN p.articulo_name LIKE ? THEN 0 ELSE 1 END) ASC";
+                $orderParams[] = $fullPhrase . '%';
+                $orderTypes .= 's';
+
+                // 3. Frase completa contenida
+                $orderClauses[] = "(CASE WHEN p.articulo_name LIKE ? THEN 0 ELSE 1 END) ASC";
+                $orderParams[] = '%' . $fullPhrase . '%';
+                $orderTypes .= 's';
+
+                // 4. Ocurrencia de palabras clave en el orden en que aparecen (si hay >= 2 tokens)
+                $numTokens = count($tokens);
+                if ($numTokens >= 2) {
+                    $pairConditions = [];
+                    for ($i = 0; $i < $numTokens - 1; $i++) {
+                        $pairConditions[] = "(LOCATE(?, p.articulo_name) > 0 AND LOCATE(?, p.articulo_name) > LOCATE(?, p.articulo_name))";
+                        $orderParams[] = $tokens[$i];
+                        $orderParams[] = $tokens[$i + 1];
+                        $orderParams[] = $tokens[$i];
+                        $orderTypes .= 'sss';
+                    }
+                    if (count($pairConditions) === 1) {
+                        $orderClauses[] = "(CASE WHEN LOCATE(?, p.articulo_name) > 0 AND LOCATE(?, p.articulo_name) > LOCATE(?, p.articulo_name) THEN 0 ELSE 1 END) ASC";
+                    } else {
+                        $orderClauses[] = "(CASE WHEN " . implode(' AND ', $pairConditions) . " THEN 0 ELSE 1 END) ASC";
+                    }
+                }
+
+                // 5. Posición de la primera palabra clave
+                $orderClauses[] = "(CASE WHEN LOCATE(?, p.articulo_name) > 0 THEN LOCATE(?, p.articulo_name) ELSE 9999 END) ASC";
+                $orderParams[] = $tokens[0];
+                $orderParams[] = $tokens[0];
+                $orderTypes .= 'ss';
+
+                // 6. Orden alfabético por descripción
+                $orderClauses[] = "p.articulo_name ASC";
+
+                $orderSql = "ORDER BY " . implode(', ', $orderClauses);
+            }
+
+            // Obtener el total de productos para la paginación
+            $countQuery = "SELECT COUNT(*) as total 
+                    FROM articulos p 
+                    WHERE " . $whereSql;
+
+            $countStmt = $conn->prepare($countQuery);
+            if (!empty($whereParams)) {
+                $countStmt->bind_param($whereTypes, ...$whereParams);
+            }
+            $countStmt->execute();
+            $countResult = $countStmt->get_result();
+            $totalRow = $countResult ? $countResult->fetch_assoc() : null;
+            $total = (int) ($totalRow['total'] ?? 0);
+
+            if ($countResult) {
+                $countResult->free();
+            }
+            $countStmt->close();
+
+            // Preparar la consulta principal con paginación real
             $query = "SELECT p.articulo_code AS code,
                       p.articulo_name AS name,
                       p.articulo_description AS description,
-                      p.articulo_price_$customerPrice AS price,
-                     p.articulo_ars_usd AS ars_usd,
-                     CAST(p.articulo_stock AS UNSIGNED) AS stock,
-                     p.articulo_featured AS featured,
-                     p.articulo_deleted AS deleted,
-                     p.articulo_updated_at AS updated_at,
-                     p.articulo_genero_code AS category_code,
-                     p.articulo_familia_code AS subcategory_code,
-                     p.articulo_cantidad_por_caja AS cantidadPorCaja,
-                     g.genero_name AS category_name,
-                     f.familia_name AS subcategory_name,
-                     img.image_id AS image_id
+                      p.articulo_price_{$customerPrice} AS price,
+                      p.articulo_ars_usd AS ars_usd,
+                      CAST(p.articulo_stock AS UNSIGNED) AS stock,
+                      p.articulo_featured AS featured,
+                      p.articulo_deleted AS deleted,
+                      p.articulo_updated_at AS updated_at,
+                      p.articulo_genero_code AS category_code,
+                      p.articulo_familia_code AS subcategory_code,
+                      p.articulo_cantidad_por_caja AS cantidadPorCaja,
+                      g.genero_name AS category_name,
+                      f.familia_name AS subcategory_name,
+                      img.image_id AS image_id
                FROM articulos p
                         LEFT JOIN generos g ON p.articulo_genero_code = g.genero_code
                         LEFT JOIN familias f ON p.articulo_familia_code = f.familia_code
                         LEFT JOIN articulos_images pi ON p.articulo_code = pi.articulos_image_articulo_code
                         LEFT JOIN images img ON pi.articulos_image_image_id = img.image_id
-                WHERE p.articulo_deleted = 0 AND (p.articulo_name LIKE ? OR p.articulo_code LIKE ?)
-               ORDER BY p.articulo_name";
+                WHERE " . $whereSql . "
+               " . $orderSql . "
+               LIMIT ? OFFSET ?";
 
+            $mainTypes = $whereTypes . $orderTypes . 'ii';
+            $mainParams = array_merge($whereParams, $orderParams, [$perPage, $offset]);
 
-            // Preparar la consulta
             $stmt = $conn->prepare($query);
-            $offset = ($page - 1) * $perPage;
-            // Vincular los parámetros
-            $searchTerm = '%' . $querySearch . '%';
-            $stmt->bind_param('ss', $searchTerm, $searchTerm);
-
+            $stmt->bind_param($mainTypes, ...$mainParams);
             $stmt->execute();
             $result = $stmt->get_result();
-            $products = $result->fetch_all(MYSQLI_ASSOC);
+            $products = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
-            // Obtener el total de productos para la paginación
-            $countQuery = "SELECT COUNT(*) as total 
-                    FROM articulos p 
-                    WHERE p.articulo_deleted = 0
-                    AND (p.articulo_name LIKE ? OR p.articulo_code LIKE ?)";
-
-            $countStmt = $conn->prepare($countQuery);
-            $countStmt->bind_param('ss', $searchTerm, $searchTerm);
-            $countStmt->execute();
-            $countResult = $countStmt->get_result();
-            $total = $countResult->fetch_assoc()['total'];
-
-            $countResult->free();
-            $result->free();
+            if ($result) {
+                $result->free();
+            }
+            $stmt->close();
 
             // Convertir array asociativo a objetos Product y actualizar ars_usd desde cotizacion
             $productObjects = [];
@@ -1438,6 +1543,7 @@ WHERE articulo_code = ?";
                 'total' => $total
             ];
         } catch (\Throwable $th) {
+            throw new ApiException($th->getMessage(), 500);
             throw new ApiException('Error al obtener los productos', 500);
         }
 

@@ -59,6 +59,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
   private subscriptions: any[] = []; // Para gestionar las suscripciones.
   globalConfig = globalConfig;
   suggestions: Product[] | undefined = undefined;
+  selectedSuggestionIndex: number = -1;
   activeInputIndex: number = 0;
   paginator: any = {
     page: 1,
@@ -66,6 +67,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
 
   isSetup: boolean = false;
   isItemsOpen: boolean = true;
+  @ViewChild('queryInput') queryInput?: ElementRef<HTMLInputElement>;
   @ViewChildren('scrollAnchor') scrollAnchors!: QueryList<ElementRef>;
   @ViewChildren('scrollContainer') scrollContainers!: QueryList<ElementRef>;
 
@@ -77,7 +79,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
   ) {
     this.formNewProduct = fb.group({
       query: ['', [Validators.required]], // Código del producto
-      quantity: [null, [Validators.required, Validators.min(1)]], // Cantidad inicial
+      quantity: [1, [Validators.required, Validators.min(1)]], // Cantidad inicial
       product: [null, [Validators.required]], // Producto seleccionado,
       discount: [0],
     });
@@ -101,11 +103,13 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
         if (!res) {
           this.formNewProduct.get('product')?.setValue(null);
           this.suggestions = undefined;
+          this.selectedSuggestionIndex = -1;
           return;
         }
         this.formNewProduct.get('product')?.setValue(null);
         this.suggestions = res.data.products;
         this.paginator = res.data;
+        this.selectedSuggestionIndex = -1;
       });
   }
 
@@ -156,6 +160,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
       );
 
       this.suggestions = undefined;
+      this.selectedSuggestionIndex = -1;
       this.alertService.showAlert(
         'Se ha cambiado el cliente, se han eliminado los productos',
         'info',
@@ -228,7 +233,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
     this.observers.set(anchor.id, observer);
   }
 
-  addItem() {
+  addItem(fromKeyboard: boolean = false) {
     const formValue = this.formNewProduct.value;
 
     if (!formValue.product) {
@@ -279,10 +284,21 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
       {
         query: '',
         product: null,
-        quantity: null,
+        quantity: 1,
       },
       { emitEvent: false },
     );
+
+    this.resetSuggestions();
+
+    if (
+      fromKeyboard ||
+      (typeof window !== 'undefined' && window.innerWidth >= 768)
+    ) {
+      setTimeout(() => {
+        this.queryInput?.nativeElement?.focus();
+      }, 0);
+    }
   }
 
   onInputChange(index: number, query: string) {
@@ -295,6 +311,118 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
 
   preventEnter(event: any) {
     event.preventDefault();
+  }
+
+  scrollToSuggestion(index: number) {
+    const container = this.scrollContainers?.first?.nativeElement;
+    if (!container) return;
+
+    const items = container.querySelectorAll('button');
+    const target = items[index] as HTMLElement;
+    if (target) {
+      target.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  onQueryKeydown(event: KeyboardEvent) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!this.suggestions || this.suggestions.length === 0) return;
+
+      if (this.selectedSuggestionIndex < this.suggestions.length - 1) {
+        this.selectedSuggestionIndex++;
+      } else {
+        this.selectedSuggestionIndex = 0;
+      }
+      this.selectSuggestion(this.suggestions[this.selectedSuggestionIndex]);
+      this.scrollToSuggestion(this.selectedSuggestionIndex);
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!this.suggestions || this.suggestions.length === 0) return;
+
+      if (this.selectedSuggestionIndex > 0) {
+        this.selectedSuggestionIndex--;
+      } else {
+        this.selectedSuggestionIndex = this.suggestions.length - 1;
+      }
+      this.selectSuggestion(this.suggestions[this.selectedSuggestionIndex]);
+      this.scrollToSuggestion(this.selectedSuggestionIndex);
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.resetSuggestions();
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.handleEnterAdd(true);
+      return;
+    }
+  }
+
+  onQuantityEnter(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.handleEnterAdd(true);
+  }
+
+  onSuggestionKeydown(event: KeyboardEvent|any, product: any) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.selectSuggestion(product);
+    this.addItem(true);
+  }
+
+  onFormSubmit(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.handleEnterAdd(true);
+  }
+
+  handleEnterAdd(fromKeyboard: boolean = true) {
+    const selectedProduct = this.formNewProduct.get('product')?.value;
+
+    // 1. Si ya hay un producto seleccionado en el formulario, agregarlo al pedido
+    if (selectedProduct) {
+      this.addItem(fromKeyboard);
+      return;
+    }
+
+    // 2. Si no hay producto seleccionado pero la lista de sugerencias está desplegada
+    if (this.suggestions && this.suggestions.length > 0) {
+      // Si el usuario navegó con las flechas y hay un índice activo
+      if (
+        this.selectedSuggestionIndex >= 0 &&
+        this.selectedSuggestionIndex < this.suggestions.length
+      ) {
+        this.selectSuggestion(this.suggestions[this.selectedSuggestionIndex]);
+        this.addItem(fromKeyboard);
+        return;
+      }
+
+      // Si hay un único resultado (ej. búsqueda por código exacto)
+      if (this.suggestions.length === 1) {
+        this.selectSuggestion(this.suggestions[0]);
+        this.addItem(fromKeyboard);
+        return;
+      }
+
+      // Si hay múltiples resultados y aún no se seleccionó ninguno:
+      // Marcamos el primero como seleccionado para que el usuario lo visualice claramente
+      this.selectSuggestion(this.suggestions[0]);
+      this.scrollToSuggestion(0);
+      return;
+    }
+
+    // 3. Si no hay producto ni sugerencias, ejecutar addItem para disparar los mensajes de validación
+    this.addItem(fromKeyboard);
   }
 
   fetchSuggestions(query: string, page: number = 1, perPage: number = 10) {
@@ -346,13 +474,24 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
     // }
 
     this.formNewProduct.patchValue(
-      { product: suggestion},
+      { product: suggestion },
       { emitEvent: false },
     );
+
+    if (this.suggestions && suggestion) {
+      this.selectedSuggestionIndex = this.suggestions.findIndex(
+        (s) =>
+          s.code === suggestion.code ||
+          (s.id && suggestion.id && s.id === suggestion.id),
+      );
+    } else {
+      this.selectedSuggestionIndex = -1;
+    }
   }
 
   resetSuggestions() {
     this.suggestions = undefined;
+    this.selectedSuggestionIndex = -1;
   }
 
   onBlurInputProduct() {

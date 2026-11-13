@@ -20,6 +20,7 @@ class ApiException extends Exception {
      */
     public function __construct(string $message = "", int $code = 0, int $customCode = 0) {
         parent::__construct($message, $code);
+        http_response_code($code);
         $this->customCode = $customCode;
     }
 

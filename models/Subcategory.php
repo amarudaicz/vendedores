@@ -11,7 +11,7 @@ class Subcategory implements JsonSerializable {
     /**
      * @var int
      */
-    private int $code;
+    private int|string|null $code;
 
     /**
      * @var string
@@ -70,7 +70,7 @@ class Subcategory implements JsonSerializable {
      * @param int $code
      * @return $this
      */
-    public function setCode(int $code): Subcategory {
+    public function setCode(int|string|null $code): Subcategory {
         $this->code = $code;
         return $this;
     }
