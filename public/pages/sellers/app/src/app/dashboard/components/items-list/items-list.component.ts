@@ -289,8 +289,8 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
       { emitEvent: false },
     );
 
-    this.resetSuggestions();
-
+    // this.resetSuggestions();
+ 
     if (
       fromKeyboard ||
       (typeof window !== 'undefined' && window.innerWidth >= 768)
@@ -355,10 +355,10 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
 
     if (event.key === 'Escape') {
       event.preventDefault();
-      this.resetSuggestions();
+      // this.resetSuggestions();
       return;
     }
-
+ 
     if (event.key === 'Enter') {
       event.preventDefault();
       event.stopPropagation();
@@ -495,7 +495,7 @@ export class ItemsListComponent implements AfterViewChecked, OnChanges, OnInit {
   }
 
   onBlurInputProduct() {
-    this.resetSuggestions();
+    // this.resetSuggestions();
   }
 
   getPriceArs(product: Product) {
