@@ -14,11 +14,6 @@ abstract class SessionFilter
     private const SESSION_TIMEOUT = 7 * 24 * 60 * 60;
 
     /**
-     * Intervalo de regeneración del ID de sesión: 5 minutos.
-     */
-    private const SESSION_REGENERATE_INTERVAL = 5 * 60;
-
-    /**
      * Valida la sesión de API.
      *
      * @return void
@@ -78,11 +73,6 @@ abstract class SessionFilter
                 'Authentication Required: The session expired. Please, sign in again.',
                 401
             );
-        }
-
-        // Regeneración periódica del identificador.
-        if ($now - $lastActivity > self::SESSION_REGENERATE_INTERVAL) {
-            session_regenerate_id(true);
         }
 
         // Actualizar última actividad.
