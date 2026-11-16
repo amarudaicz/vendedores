@@ -332,23 +332,33 @@
           </button>
 
           <!-- Números de página -->
-          <button
-            *ngFor="let pageNum of getPageNumbers()"
-            (click)="goToPage(pageNum)"
-            [disabled]="loadingPage"
-            class="min-w-[28px] h-[28px] px-1.5 text-xs sm:text-sm rounded transition-all relative"
-            [ngClass]="{
-              'font-bold text-primary': pageNum === paginator.page,
-              'text-gray-600 hover:text-primary hover:bg-gray-50':
-                pageNum !== paginator.page,
-            }"
-          >
-            {{ pageNum }}
-            <span
-              *ngIf="pageNum === paginator.page"
-              class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4/5 h-0.5 bg-primary rounded-full"
-            ></span>
-          </button>
+          @for (page of visiblePages; track $index) {
+            @if (page === '...') {
+              <span
+                class="min-w-[28px] h-[28px] flex items-center justify-center text-xs sm:text-sm text-gray-400 select-none cursor-default"
+              >
+                ...
+              </span>
+            } @else {
+              <button
+                (click)="goToPage(page)"
+                [disabled]="loadingPage"
+                class="min-w-[28px] h-[28px] px-1.5 text-xs sm:text-sm rounded transition-all relative"
+                [ngClass]="{
+                  'font-bold text-primary': page === paginator.page,
+                  'text-gray-600 hover:text-primary hover:bg-gray-50':
+                    page !== paginator.page,
+                }"
+              >
+                {{ page }}
+                @if (page === paginator.page) {
+                  <span
+                    class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-4/5 h-0.5 bg-primary rounded-full"
+                  ></span>
+                }
+              </button>
+            }
+          }
 
           <!-- Botón siguiente -->
           <button
