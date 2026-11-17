@@ -11,6 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { OrdersService } from '../../../shared/services/orders/orders.service';
 import AlertService from '../../../shared/services/alert/alert.service';
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
+import { BehaviorSubject, debounce, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-order-modify',
@@ -38,6 +39,7 @@ export class OrderModifyComponent implements OnInit {
 
   newItemForm!: FormGroup;
   originalItems: any[] = [];
+  onChangeSearch = new BehaviorSubject('');
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -65,18 +67,27 @@ export class OrderModifyComponent implements OnInit {
       this.orderId = parseInt(params['id']);
       this.loadOrder();
     });
+
+    this.onChangeSearch.pipe(
+      debounceTime(500),
+      distinctUntilChanged()      
+    ).subscribe(query => {
+      this.loadAllProducts(query);    
+    })
   }
 
-  loadAllProducts() {
-    this.ordersService.searchProducts('', this.customer.priceList).subscribe(
-      (res: any) => {
-        this.allProducts = res.data.products || [];
-        this.filteredProducts = this.allProducts;
-      },
-      (error: any) => {
-        // Handle error silently
-      },
-    );
+  loadAllProducts(searchTerm?: string) {
+    this.ordersService
+      .searchProducts(searchTerm || '', this.customer.priceList)
+      .subscribe(
+        (res: any) => {
+          this.allProducts = res.data.products || [];
+          this.filteredProducts = this.allProducts;
+        },
+        (error: any) => {
+          // Handle error silently
+        },
+      );
   }
 
   onProductInputFocus() {
@@ -91,24 +102,11 @@ export class OrderModifyComponent implements OnInit {
     if (!searchTerm.trim()) {
       this.filteredProducts = this.allProducts;
       return;
-    }
+    }  
 
-    const term = searchTerm.toLowerCase();
-    this.filteredProducts = this.allProducts.filter((product) => {
-      const name = (product.name || '').toLowerCase();
-      const description = (product.description || '').toLowerCase();
-      const code = (
-        product.code ||
-        product.product_code ||
-        product.productCode ||
-        ''
-      )
-        .toString()
-        .toLowerCase();
-      return (
-        name.includes(term) || description.includes(term) || code.includes(term)
-      );
-    });
+    this.onChangeSearch.next(searchTerm)
+
+    // this.loadAllProducts(searchTerm);
   }
 
   selectProduct(product: any) {
