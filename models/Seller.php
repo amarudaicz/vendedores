@@ -240,7 +240,7 @@ class Seller implements JsonSerializable
         $stmt->execute();
         $result = $stmt->get_result();
         $seller = null;
-        
+
         if ($row = $result->fetch_assoc()) {
             $seller = new Seller();
             $seller->setId($row['id']);
@@ -252,8 +252,8 @@ class Seller implements JsonSerializable
             $seller->setDeleted($row['deleted']);
             $seller->setCreatedAt($row['created_at']);
             $seller->setUpdatedAt($row['updated_at']);
-            $seller->setIsAdmin((bool)$row['is_admin']);
-            $seller->setDolar((float)$row['dolar']);
+            $seller->setIsAdmin((bool) $row['is_admin']);
+            $seller->setDolar((float) $row['dolar']);
         }
 
         $stmt->close();
@@ -268,7 +268,7 @@ class Seller implements JsonSerializable
         $conn = Connection::getConn();
         Logger::log('info', json_encode($seller));
 
-         $query = "INSERT INTO vendedor (vendedor_name, vendedor_code, vendedor_email, vendedor_deleted, vendedor_created_at, vendedor_updated_at)
+        $query = "INSERT INTO vendedor (vendedor_name, vendedor_code, vendedor_email, vendedor_deleted, vendedor_created_at, vendedor_updated_at)
         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?) 
         ON DUPLICATE KEY UPDATE 
             vendedor_name = VALUES(vendedor_name),
@@ -315,12 +315,12 @@ class Seller implements JsonSerializable
         while ($row = $result->fetch_assoc()) {
             $seller = new Seller();
             $seller->setCode($row["code"]);
-            $seller->setName($row["name"]); 
+            $seller->setName($row["name"]);
             $seller->setPasswordSalt($row["password_salt"]);
             $seller->setPasswordHash($row["password_hash"]);
             $seller->setDeleted($row["deleted"]);
             $seller->setUpdatedAt($row["updated_at"]);
-            $seller->setDolar((float)$row["dolar"]);
+            $seller->setDolar((float) $row["dolar"]);
             $sellers[] = $seller;
         }
 
@@ -372,8 +372,10 @@ class Seller implements JsonSerializable
         $stmt = $conn->prepare("UPDATE vendedor SET vendedor_password_hash = ? WHERE vendedor_id = ?");
         $stmt->bind_param("si", $newPasswordHash, $id);
         $result = $stmt->execute();
+        $affected = $stmt->affected_rows;
         $stmt->close();
-        return $result;
+
+        return $result && $affected > 0;
     }
 
     public static function getStats(?int $sellerCode, array $filters = [])
@@ -480,7 +482,7 @@ class Seller implements JsonSerializable
 
         if (!empty($filters['search'])) {
             $query .= " AND (o.orden_id = ? OR c.cliente_name LIKE ? OR c.cliente_dni LIKE ?)";
-            $searchId = is_numeric($filters['search']) ? (int)$filters['search'] : 0;
+            $searchId = is_numeric($filters['search']) ? (int) $filters['search'] : 0;
             $searchTerm = '%' . $filters['search'] . '%';
             $params[] = $searchId;
             $params[] = $searchTerm;
@@ -518,18 +520,18 @@ class Seller implements JsonSerializable
         }
 
         if (!empty($params)) {
-             $stmt->bind_param($types, ...$params);
+            $stmt->bind_param($types, ...$params);
         }
 
         $stmt->execute();
         $result = $stmt->get_result();
         $current = $result->fetch_assoc();
 
-        $formatStat = function($val) {
-             return [
-                 'count' => $val ?? 0,
-                 'percentage' => 0 
-             ];
+        $formatStat = function ($val) {
+            return [
+                'count' => $val ?? 0,
+                'percentage' => 0
+            ];
         };
 
         return [
@@ -556,26 +558,30 @@ class Seller implements JsonSerializable
             $seller->setDeleted($row['deleted']);
             $seller->setCreatedAt($row['created_at']);
             $seller->setUpdatedAt($row['updated_at']);
-            $seller->setIsAdmin((bool)$row['is_admin']);
-            $seller->setDolar((float)$row['dolar']);
+            $seller->setIsAdmin((bool) $row['is_admin']);
+            $seller->setDolar((float) $row['dolar']);
             $sellers[] = $seller;
         }
         return $sellers;
     }
 
-    public function getIsAdmin(): bool {
+    public function getIsAdmin(): bool
+    {
         return $this->isAdmin;
     }
 
-    public function setIsAdmin(bool $isAdmin): void {
+    public function setIsAdmin(bool $isAdmin): void
+    {
         $this->isAdmin = $isAdmin;
     }
 
-    public function getDolar(): float {
+    public function getDolar(): float
+    {
         return $this->dolar;
     }
 
-    public function setDolar(float $dolar): void {
+    public function setDolar(float $dolar): void
+    {
         $this->dolar = $dolar;
     }
 }

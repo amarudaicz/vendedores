@@ -1341,11 +1341,10 @@ WHERE articulo_code = ?";
             }
 
             $page = (int) $page;
-            if ($page <= 0) {
-                $page = 1;
-            }
+           
 
             $perPage = (int) $perPage;
+            
             if ($perPage <= 0) {
                 $perPage = 10;
             }

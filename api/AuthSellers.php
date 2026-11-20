@@ -198,11 +198,7 @@ abstract class AuthSellers
             throw new ApiException('La nueva contraseña es requerida.', 400);
         }
 
-        $newPasswordHash = password_hash(
-            $account->getPasswordSalt() . $data->newPassword,
-            PASSWORD_DEFAULT
-        );
-
+        $newPasswordHash = password_hash($data->newPassword, PASSWORD_DEFAULT);
         $result = Seller::updatePassword($targetSellerId, $newPasswordHash);
 
         if (!$result) {

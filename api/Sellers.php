@@ -33,10 +33,9 @@ abstract class Sellers
         $query = trim($_GET['query'] ?? '');
         $customerPrice = $_GET['customer_price'] ?? '';
         $page = (int) ($_GET['page'] ?? 1);
-        if ($page <= 0) {
-            $page = 1;
-        }
+
         $perPage = (int) ($_GET['perPage'] ?? $_GET['per_page'] ?? 10);
+
         if ($perPage <= 0) {
             $perPage = 10;
         }

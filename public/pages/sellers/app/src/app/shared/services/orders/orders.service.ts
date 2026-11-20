@@ -78,7 +78,7 @@ export class OrdersService {
     let params = new HttpParams()
       .set('query', query)
       .set('customer_price', customerPrice.toString())
-      .set('perPage', '500'); // Traer más productos para el dropdown
+      .set('perPage', '500');
     
     return this.http.get(`${environment.apiUrl}sellers/products`, { 
       withCredentials: true,
