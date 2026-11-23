@@ -96,12 +96,32 @@
 @media print {
     .Order {
         padding: 0;
+        max-width: 100%;
     }
     .Order .no-print {
         display: none;
     }
 
-    .Order .content {
+    .Order .content,
+    .Order #order-content {
         padding: 0;
+    }
+
+    .Order .order-body {
+        width: 100%;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    .Order .order-body .order-table {
+        width: 100%;
+        table-layout: auto;
+        font-size: 11px;
+    }
+
+    .Order .order-body .order-table th,
+    .Order .order-body .order-table td {
+        padding: 4px 6px;
+        word-break: break-word;
     }
 }

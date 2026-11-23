@@ -1,5 +1,5 @@
 <div class="Order">
-  <div class="flex justify-between mb-4 items-center">
+  <div class="flex justify-between mb-4 items-center no-print">
     <a
       (click)="back()"
       class="flex cursor-pointer items-center gap-x-1 p-2 rounded text-gray-800 font-bold"
@@ -148,7 +148,7 @@
       </div>
     </div>
 
-    <div class="order-body overflow-auto pb-3 mb-8 md:min-w-[900px]">
+    <div class="order-body overflow-x-auto pb-3 mb-8 w-full">
       <table class="order-table">
         <thead>
           <tr>
@@ -252,19 +252,19 @@
           <tr *ngIf="customerDiscountPercent > 0">
             <td class="text-blue-800 font-bold">SUBTOTAL $</td>
             <td><span *ngIf="total">{{ subtotalArs | currency }}</span></td>
-            <td colspan="5"></td>
+            <td [attr.colspan]="globalConfig.cotizacion ? 5 : 3"></td>
           </tr>
           <tr *ngIf="customerDiscountPercent > 0">
             <td class="text-red-600 font-bold">DESCUENTO ({{ customerDiscountPercent }}%)</td>
             <td class="text-red-600 font-bold">-{{ discountAmountArs | currency }}</td>
-            <td colspan="5"></td>
+            <td [attr.colspan]="globalConfig.cotizacion ? 5 : 3"></td>
           </tr>
           <tr>
             <td class="text-blue-800 font-bold">{{ customerDiscountPercent > 0 ? 'TOTAL CON DESCUENTO $' : 'TOTAL $' }}</td>
             <td>
               <span *ngIf="total">{{ totalWithDiscountArs | currency }}</span>
             </td>
-            <td colspan="5"></td>
+            <td [attr.colspan]="globalConfig.cotizacion ? 5 : 3"></td>
           </tr>
         </tfoot>
       </table>
