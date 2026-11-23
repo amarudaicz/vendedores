@@ -1,0 +1,185 @@
+@import "/public/node_modules/bootstrap-icons/font/bootstrap-icons.min.css";
+@import "/public/node_modules/bootstrap/dist/css/bootstrap.min.css";
+@import "/public/node_modules/sweetalert2/dist/sweetalert2.min.css";
+
+@import "/public/node_modules/@fontsource/roboto-condensed/300.css";
+@import "/public/node_modules/@fontsource/roboto-condensed/400.css";
+@import "/public/node_modules/@fontsource/roboto-condensed/700.css";
+
+@import "/public/node_modules/@fontsource/roboto/300.css";
+@import "/public/node_modules/@fontsource/roboto/400.css";
+@import "/public/node_modules/@fontsource/roboto/700.css";
+
+:root {
+    --view-max-width: 1200px;
+}
+
+:root.no-scroll {
+    overflow: hidden;
+}
+
+/** Custom table **/
+table.custom-table {
+    width: 100%;
+    border-spacing: 0 0.8rem;
+    border-collapse: separate;
+}
+
+table.custom-table thead tr th {
+    background-color: white;
+    border-right: 5px solid #f1f1f1;
+    font-weight: normal;
+    padding: 1rem;
+    color: #59606e;
+}
+
+table.custom-table thead tr th:last-child {
+    border-right: none;
+}
+
+table.custom-table tbody tr {
+    background-color: white;
+}
+
+table.custom-table tbody tr td {
+    padding: 1rem;
+    color: #455165;
+}
+
+[data-theme="dark"] table.custom-table thead tr th {
+    background-color: #2c374c;
+    border-color: #191f2c;
+    color: #7988a8;
+}
+
+[data-theme="dark"] table.custom-table tbody tr {
+    background-color: #2c374c;
+}
+
+[data-theme="dark"] table.custom-table tbody tr td {
+    color: #e8e8e8;
+}
+
+@media (max-width: 700px) {
+    table.custom-table thead {
+        display: none;
+    }
+
+    table.custom-table tbody.entries {
+        display: block;
+    }
+
+    table.custom-table tbody.entries tr {
+        display: block;
+        margin-bottom: 1rem;
+        background-color: transparent;
+        box-shadow: none;
+    }
+
+    table.custom-table tbody.entries tr td {
+        display: block;
+        text-align: end;
+        margin: .3rem 0;
+        background-color: white;
+    }
+
+    table.custom-table tbody.entries tr td:before {
+        content: attr(data-colname);
+        display: block;
+        color: #59606e;
+        text-align: start;
+    }
+
+    [data-theme="dark"] table.custom-table tbody tr td {
+        background-color: #2c374c;
+    }
+
+    [data-theme="dark"] table.custom-table tbody.entries tr td:before {
+        color: #b0b7c5;
+    }
+}
+
+/** Custom table 2 **/
+table.custom-table-2 {
+    width: 100%;
+    border-spacing: 0 0.8rem;
+    border-collapse: separate;
+}
+
+table.custom-table-2 thead tr th {
+    background-color: #e8e8e8;
+    border-right: 5px solid #ffffff;
+    font-weight: normal;
+    padding: 1rem;
+    color: #2f3741;
+}
+
+table.custom-table-2 thead tr th:last-child {
+    border-right: none;
+}
+
+table.custom-table-2 tbody tr:nth-child(odd) {
+    background-color: #f7f7f7;
+}
+
+table.custom-table-2 tbody tr:nth-child(even) {
+    background-color: #f7f7f7;
+}
+
+table.custom-table-2 tbody tr td {
+    padding: 1rem;
+    color: #2e3644;
+}
+
+[data-theme="dark"] table.custom-table-2 thead tr th {
+    background-color: #2c374c;
+    border-color: #191f2c;
+    color: #7988a8;
+}
+
+[data-theme="dark"] table.custom-table-2 tbody tr {
+    background-color: #2c374c;
+}
+
+[data-theme="dark"] table.custom-table-2 tbody tr td {
+    color: #e8e8e8;
+}
+
+@media (max-width: 700px) {
+    table.custom-table-2 thead {
+        display: none;
+    }
+
+    table.custom-table-2 tbody.entries {
+        display: block;
+    }
+
+    table.custom-table-2 tbody.entries tr {
+        display: block;
+        margin-bottom: 1rem;
+        background-color: transparent;
+        box-shadow: none;
+    }
+
+    table.custom-table-2 tbody.entries tr td {
+        display: block;
+        text-align: end;
+        margin: .3rem 0;
+        background-color: #f7f7f7;
+    }
+
+    table.custom-table-2 tbody.entries tr td:before {
+        content: attr(data-colname);
+        display: block;
+        color: #59606e;
+        text-align: start;
+    }
+
+    [data-theme="dark"] table.custom-table-2 tbody tr td {
+        background-color: #2c374c;
+    }
+
+    [data-theme="dark"] table.custom-table-2 tbody.entries tr td:before {
+        color: #b0b7c5;
+    }
+}

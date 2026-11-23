@@ -1,0 +1,16 @@
+<div [formGroup]="form">
+  <label [for]="controlName" class="block font-medium mb-1">Método de Envío</label>
+  <p-select
+    [id]="controlName"
+    [formControlName]="controlName"
+    [options]="options"
+    optionLabel="label"
+    optionValue="value"
+    [filter]="true"
+    filterBy="label"
+    filterPlaceholder="Buscar método..."
+    [showClear]="true"
+    placeholder=""
+    styleClass="w-full mt-1"
+  ></p-select>
+</div>

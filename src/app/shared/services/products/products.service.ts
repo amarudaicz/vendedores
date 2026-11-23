@@ -1,0 +1,21 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, map } from 'rxjs';
+import { environment } from '@environments/environment';
+import { ApiRes } from '../../../interfaces/apiRes';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ProductsService {
+  constructor(private http: HttpClient) {}
+
+  public dolar$ = new BehaviorSubject<number>(0);
+
+  getDolar() {
+    return this.http
+      .get<ApiRes<{ dolar: number }>>(`${environment.apiUrl}dolar`)
+      .pipe(map((res) => res.data.dolar))
+      .subscribe((res) => this.dolar$.next(res));
+  }
+}

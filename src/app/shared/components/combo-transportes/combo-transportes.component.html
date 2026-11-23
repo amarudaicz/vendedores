@@ -1,0 +1,16 @@
+<div [formGroup]="form">
+  <label [for]="controlName" class="block font-medium mb-1">Transporte</label>
+  <p-select
+    [id]="controlName"
+    [formControlName]="controlName"
+    [options]="transportes"
+    optionLabel="transporte_nombre"
+    optionValue="transporte_id"
+    [filter]="true"
+    filterBy="transporte_nombre"
+    filterPlaceholder=""
+    [showClear]="true"
+    [placeholder]="loading ? 'Cargando...' : ''"
+    styleClass="w-full mt-1"
+  ></p-select>
+</div>

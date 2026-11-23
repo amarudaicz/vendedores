@@ -1,0 +1,539 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import {
+  AfterViewChecked,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  QueryList,
+  SimpleChange,
+  SimpleChanges,
+  ViewChild,
+  ViewChildren,
+} from '@angular/core';
+import {
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {
+  Subject,
+  catchError,
+  debounceTime,
+  of,
+  switchMap,
+  takeUntil,
+} from 'rxjs';
+import AlertService from '../../../shared/services/alert/alert.service';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { environment } from '@environments/environment';
+import { Product } from '../../../interfaces/product.interface';
+import { globalConfig } from '../../../global-config';
+import { Customer } from '../../../interfaces/customer';
+
+@Component({
+  selector: 'app-items-list',
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './items-list.component.html',
+  styleUrl: './items-list.component.scss',
+})
+export class ItemsListComponent
+  implements AfterViewChecked, OnChanges, OnInit, OnDestroy
+{
+  itemsFormArray!: FormArray;
+  formNewProduct: FormGroup;
+
+  @Input() form!: FormGroup;
+
+  @Input() customer!: Customer;
+  @Output() itemsEmitter: EventEmitter<any> = new EventEmitter();
+
+  private querySubjects: Subject<string>[] = []; // Almacena Subjects individuales para cada input.
+  private subscriptions: any[] = []; // Para gestionar las suscripciones.
+  globalConfig = globalConfig;
+  suggestions: Product[] | undefined = undefined;
+  selectedSuggestionIndex: number = -1;
+  activeInputIndex: number = 0;
+  paginator: any = {
+    page: 1,
+  };
+
+  isSetup: boolean = false;
+  isItemsOpen: boolean = true;
+  @ViewChild('queryInput') queryInput?: ElementRef<HTMLInputElement>;
+  @ViewChildren('scrollAnchor') scrollAnchors!: QueryList<ElementRef>;
+  @ViewChildren('scrollContainer') scrollContainers!: QueryList<ElementRef>;
+
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private alertService: AlertService,
+    private router: Router,
+  ) {
+    this.formNewProduct = fb.group({
+      query: ['', [Validators.required]], // Código del producto
+      quantity: [1, [Validators.required, Validators.min(1)]], // Cantidad inicial
+      product: [null, [Validators.required]], // Producto seleccionado,
+      discount: [0],
+    });
+
+    this.formNewProduct
+      .get('query')
+      ?.valueChanges.pipe(
+        debounceTime(300),
+        switchMap((query: string) => {
+          if (!query) {
+            return of(null);
+          }
+          return this.fetchSuggestions(query).pipe(
+            catchError(() => {
+              return of({ data: { products: [], paginator: {} } }); // Valor por defecto
+            }),
+          );
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((res: any) => {
+        if (!res) {
+          this.formNewProduct.get('product')?.setValue(null);
+          this.suggestions = undefined;
+          this.selectedSuggestionIndex = -1;
+          return;
+        }
+        this.formNewProduct.get('product')?.setValue(null);
+        this.suggestions = res.data.products;
+        this.paginator = res.data;
+        this.selectedSuggestionIndex = -1;
+      });
+  }
+
+  private destroy$ = new Subject<void>();
+  private observedElements = new Set<string>();
+  private observers = new Map<string, IntersectionObserver>();
+  private prevCustomer: any;
+
+  ngOnInit(): void {
+    this.itemsFormArray = this.form.get('items') as FormArray;
+
+    this.querySubjects = [];
+
+    this.form.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value: any) => {
+      console.log(value);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.observers.forEach((observer) => observer.disconnect());
+    this.observers.clear();
+    this.observedElements.clear();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    const customerChange: SimpleChange = changes['customer'];
+
+    if (customerChange && !customerChange.firstChange) {
+      this.setCustomer(customerChange.currentValue);
+    }
+  }
+
+  ngAfterViewChecked(): void {
+    this.setupObservers();
+    this.itemsEmitter.emit(
+      this.itemsFormArray.value.filter((e: any) => e.product),
+    );
+  }
+
+  setCustomer(customer: any) {
+    if (
+      this.prevCustomer &&
+      customer &&
+      customer.price_list !== this.prevCustomer.price_list
+    ) {
+      this.prevCustomer = customer;
+      this.itemsFormArray.clear(); // Clear the items form array
+      this.formNewProduct.patchValue(
+        {
+          product: null,
+          query: '',
+          discount: 0,
+        },
+        { emitEvent: false },
+      );
+
+      this.suggestions = undefined;
+      this.selectedSuggestionIndex = -1;
+      this.alertService.showAlert(
+        'Se ha cambiado el cliente, se han eliminado los productos',
+        'info',
+      );
+    } else if (customer) {
+      this.prevCustomer = customer;
+    }
+  }
+
+  getTotalPedido(): number {
+    const items = this.itemsFormArray.value;
+    const generalDiscount = this.form.get('discount')?.value || 0;
+
+    let total = 0;
+    items.forEach((item: any) => {
+      if (!item.product) return;
+      const basePrice = this.getPriceArs(item.product);
+      const precioConDescuento = basePrice * (1 - (item.discount || 0) / 100);
+      total += precioConDescuento * item.quantity;
+    });
+
+    // Aplicar descuento general
+    total = total * (1 - generalDiscount / 100);
+
+    return total;
+  }
+
+  getTotalConDescuentoCliente(): number {
+    const total = this.getTotalPedido();
+    const customerDiscount = Number(this.customer?.descuento || 0);
+    return total * (1 - customerDiscount / 100);
+  }
+
+  setupObservers() {
+    this.scrollAnchors.forEach((anchor, index) => {
+      const container = this.scrollContainers.toArray()[index];
+      if (anchor && container) {
+        const anchorId = anchor.nativeElement.id;
+        const containerId = container.nativeElement.id;
+        if (!this.observedElements.has(anchorId)) {
+          console.log('Configurando observer para:', anchorId, containerId);
+          this.setupIntersectionObserver(
+            anchor.nativeElement,
+            container.nativeElement,
+          );
+          this.observedElements.add(anchorId);
+        }
+      }
+    });
+  }
+
+  setupIntersectionObserver(anchor: HTMLElement, container: HTMLElement) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            console.log('Intersección detectada:', anchor.id);
+            this.loadMoreSuggestions();
+          }
+        });
+      },
+      {
+        root: container, // El contenedor con overflow-scroll
+        rootMargin: '0px',
+        threshold: 0.1, // Se activa cuando el 10% del elemento está visible
+      },
+    );
+
+    observer.observe(anchor);
+    this.observers.set(anchor.id, observer);
+  }
+
+  addItem(fromKeyboard: boolean = false) {
+    const formValue = this.formNewProduct.value;
+
+    if (!formValue.product) {
+      this.formNewProduct.markAllAsTouched();
+      this.alertService.showAlert('Busca un producto antes de agregar', 'info');
+      return;
+    }
+
+    if (formValue.quantity <= 0) {
+      this.alertService.showAlert('La cantidad debe ser mayor a 0', 'info');
+      return;
+    }
+
+    // if(formValue.quantity > formValue.product.stock){
+    //   this.alertService.showAlert(
+    //     'No hay stock suficiente',
+    //     'error',
+    //   );
+    //   return;
+    // }
+
+    const existingIndex = this.itemsFormArray.controls.findIndex(
+      (control) =>
+        control.get('product')?.value?.code === formValue.product.code ||
+        (control.get('product')?.value?.id &&
+          control.get('product')?.value?.id === formValue.product.id),
+    );
+
+    if (existingIndex !== -1) {
+      const existingControl = this.itemsFormArray.at(existingIndex);
+      const currentQty = Number(existingControl.get('quantity')?.value || 0);
+      existingControl.patchValue({
+        quantity: currentQty + Number(formValue.quantity),
+      });
+    } else {
+      this.itemsFormArray.push(
+        this.fb.group({
+          product: [formValue.product],
+          quantity: [formValue.quantity],
+          discount: [formValue.discount],
+        }),
+      );
+    }
+
+    this.alertService.showAlert('Producto agregado', 'success');
+
+    this.formNewProduct.patchValue(
+      {
+        query: '',
+        product: null,
+        quantity: 1,
+      },
+      { emitEvent: false },
+    );
+
+    // this.resetSuggestions();
+ 
+    if (
+      fromKeyboard ||
+      (typeof window !== 'undefined' && window.innerWidth >= 768)
+    ) {
+      setTimeout(() => {
+        this.queryInput?.nativeElement?.focus();
+      }, 0);
+    }
+  }
+
+  onInputChange(index: number, query: string) {
+    if (this.querySubjects[index]) {
+      this.querySubjects[index].next(query); // Emitir el nuevo valor al Subject correspondiente.
+      this.activeInputIndex = index; // Actualiza el índice activo cuando se escribe
+      this.itemsFormArray.at(index).patchValue({ product: null }); // Reinicia el producto seleccionado
+    }
+  }
+
+  preventEnter(event: any) {
+    event.preventDefault();
+  }
+
+  scrollToSuggestion(index: number) {
+    const container = this.scrollContainers?.first?.nativeElement;
+    if (!container) return;
+
+    const items = container.querySelectorAll('button');
+    const target = items[index] as HTMLElement;
+    if (target) {
+      target.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  onQueryKeydown(event: KeyboardEvent) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!this.suggestions || this.suggestions.length === 0) return;
+
+      if (this.selectedSuggestionIndex < this.suggestions.length - 1) {
+        this.selectedSuggestionIndex++;
+      } else {
+        this.selectedSuggestionIndex = 0;
+      }
+      this.selectSuggestion(this.suggestions[this.selectedSuggestionIndex]);
+      this.scrollToSuggestion(this.selectedSuggestionIndex);
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!this.suggestions || this.suggestions.length === 0) return;
+
+      if (this.selectedSuggestionIndex > 0) {
+        this.selectedSuggestionIndex--;
+      } else {
+        this.selectedSuggestionIndex = this.suggestions.length - 1;
+      }
+      this.selectSuggestion(this.suggestions[this.selectedSuggestionIndex]);
+      this.scrollToSuggestion(this.selectedSuggestionIndex);
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      // this.resetSuggestions();
+      return;
+    }
+ 
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.handleEnterAdd(true);
+      return;
+    }
+  }
+
+  onQuantityEnter(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.handleEnterAdd(true);
+  }
+
+  onSuggestionKeydown(event: KeyboardEvent|any, product: any) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.selectSuggestion(product);
+    this.addItem(true);
+  }
+
+  onFormSubmit(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.handleEnterAdd(true);
+  }
+
+  handleEnterAdd(fromKeyboard: boolean = true) {
+    const selectedProduct = this.formNewProduct.get('product')?.value;
+
+    // 1. Si ya hay un producto seleccionado en el formulario, agregarlo al pedido
+    if (selectedProduct) {
+      this.addItem(fromKeyboard);
+      return;
+    }
+
+    // 2. Si no hay producto seleccionado pero la lista de sugerencias está desplegada
+    if (this.suggestions && this.suggestions.length > 0) {
+      // Si el usuario navegó con las flechas y hay un índice activo
+      if (
+        this.selectedSuggestionIndex >= 0 &&
+        this.selectedSuggestionIndex < this.suggestions.length
+      ) {
+        this.selectSuggestion(this.suggestions[this.selectedSuggestionIndex]);
+        this.addItem(fromKeyboard);
+        return;
+      }
+
+      // Si hay un único resultado (ej. búsqueda por código exacto)
+      if (this.suggestions.length === 1) {
+        this.selectSuggestion(this.suggestions[0]);
+        this.addItem(fromKeyboard);
+        return;
+      }
+
+      // Si hay múltiples resultados y aún no se seleccionó ninguno:
+      // Marcamos el primero como seleccionado para que el usuario lo visualice claramente
+      this.selectSuggestion(this.suggestions[0]);
+      this.scrollToSuggestion(0);
+      return;
+    }
+
+    // 3. Si no hay producto ni sugerencias, ejecutar addItem para disparar los mensajes de validación
+    this.addItem(fromKeyboard);
+  }
+
+  fetchSuggestions(query: string, page: number = 1, perPage: number = 10) {
+    // Asegurar que customer_price sea válido (entre 1 y 6)
+    let customer_price = this.customer?.price_list || 1;
+    if (customer_price < 1 || customer_price > 6) {
+      customer_price = 1;
+    }
+
+    const params = new HttpParams()
+      .set('query', query)
+      .set('customer_price', customer_price.toString())
+      .set('page', page.toString())
+      .set('per_page', perPage.toString());
+
+    return this.http.get<any>(`${environment.apiUrl}products`, { params });
+  }
+
+  loadMoreSuggestions() {
+    if (
+      this.paginator.page === this.paginator.totalPages ||
+      this.formNewProduct.get('product')?.value
+    )
+      return;
+
+    const query = this.formNewProduct.get('query')?.value;
+
+    if (query) {
+      this.fetchSuggestions(query, this.paginator.page + 1)
+        .pipe(
+          catchError((error) => {
+            console.error('Error en la solicitud:', error);
+            return of({ data: { products: [], paginator: {} } }); // Valor por defecto para no romper el flujo
+          }),
+        )
+        .subscribe((res: any) => {
+          this.suggestions = [
+            ...(this.suggestions || []),
+            ...res.data.products,
+          ];
+          this.paginator.page++;
+        });
+    }
+  }
+
+  removeItem(index: number) {
+    this.itemsFormArray.removeAt(index);
+  }
+
+  selectSuggestion(suggestion: any) {
+    // if (!suggestion.stock || suggestion.stock < 0) {
+    //   this.alertService.showAlert('No hay stock del producto', 'error');
+    //   return;
+    // }
+
+    this.formNewProduct.patchValue(
+      { product: suggestion },
+      { emitEvent: false },
+    );
+
+    if (this.suggestions && suggestion) {
+      this.selectedSuggestionIndex = this.suggestions.findIndex(
+        (s) =>
+          s.code === suggestion.code ||
+          (s.id && suggestion.id && s.id === suggestion.id),
+      );
+    } else {
+      this.selectedSuggestionIndex = -1;
+    }
+  }
+
+  resetSuggestions() {
+    this.suggestions = undefined;
+    this.selectedSuggestionIndex = -1;
+  }
+
+  onBlurInputProduct() {
+    // this.resetSuggestions();
+  }
+
+  getPriceArs(product: Product) {
+    return this.globalConfig.cotizacion
+      ? product.price * product.arsUsd
+      : product.price;
+  }
+
+  getDiscountedPriceArs(item: any) {
+    const product = item.get('product')?.value;
+    if (!product) return 0;
+    const basePrice = this.getPriceArs(product);
+    const itemDiscount = item.get('discount')?.value || 0;
+    const generalDiscount = this.form.get('discount')?.value || 0;
+    return basePrice * (1 - itemDiscount / 100) * (1 - generalDiscount / 100);
+  }
+
+  getDiscountedPriceUsd(item: any) {
+    const product = item.get('product')?.value;
+    if (!product) return 0;
+    const basePrice = product.price;
+    const itemDiscount = item.get('discount')?.value || 0;
+    const generalDiscount = this.form.get('discount')?.value || 0;
+    return basePrice * (1 - itemDiscount / 100) * (1 - generalDiscount / 100);
+  }
+}
